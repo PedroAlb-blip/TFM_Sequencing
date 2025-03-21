@@ -47,8 +47,8 @@ def tmp_aln(fw, rv):
 
 # tmp_aln(reader(path_fw), reader(path_rv, True))
 
-def aligner():
-   cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "2.0", "--ep", "0.1", tmp_aln(reader(path_fw), reader(path_rv))]
+def aligner(file):
+   cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "2.0", "--ep", "0.1", file]
    process = subprocess.run(cmd, capture_output=True, text=True)
    matches = process.stdout.split('\n')
    fw_seq=""
@@ -63,6 +63,9 @@ def aligner():
          match_seq=match_seq+(i[16:])
    match_seq=match_seq.replace(" ", "_")
    return match_seq, fw_seq, rv_seq
+
+
+aligner(tmp_aln(reader(path_fw), reader(path_rv)))
 
 # print(record_F.annotations.keys())
 # dict_keys(["dye", "abif_raw", "sample_well", "run_finish", "machine_model", "run_start", "polymer"])
