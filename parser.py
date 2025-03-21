@@ -27,9 +27,6 @@ def reader (path, fmt="abi"):
       sequence = str(">Forward" + '\n' + sequence +'\n')
    return sequence
 
-path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
-path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
-
 def tmp_aln(fw, rv):
    ### This function creates 
    files=os.listdir()
@@ -64,7 +61,8 @@ def aligner(file):
    match_seq=match_seq.replace(" ", "_")
    return match_seq, fw_seq, rv_seq
 
-
+path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
+path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
 aligner(tmp_aln(reader(path_fw), reader(path_rv)))
 
 # print(record_F.annotations.keys())
