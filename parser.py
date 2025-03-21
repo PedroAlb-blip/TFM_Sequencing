@@ -61,9 +61,33 @@ def aligner(file):
    match_seq=match_seq.replace(" ", "_")
    return match_seq, fw_seq, rv_seq
 
+
+def modifier(path_fw, path_rv):
+   all=aligner(tmp_aln(reader(path_fw), reader(path_rv)))
+   align=all[0]
+   fw=all[1]
+   rv=all[2]
+   Forward=reader(path_fw).removeprefix(">Forward\n")
+   Reverse=reader(path_rv).removeprefix(">Reverse\n")
+   print(Forward)
+   print(Reverse)
+   i=0
+   while i < (len(align)-20):
+      kmer=align[i:i+20]
+      if kmer.count('*') > 6:
+         pos_1=Forward.index(fw[i + kmer.index('*'):i + 25].upper())
+         # print(fw[i + kmer.index('*'):i + 25].upper())
+         pos_2=Reverse.index(rv[i + kmer.index('*'):i + 25].upper())
+         # print(rv[i + kmer.index('*'):i + 25].upper())
+         break
+      else:
+         i=i+1
+   return pos_1, pos_2
+
 path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
 path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
-aligner(tmp_aln(reader(path_fw), reader(path_rv)))
+#print(aligner(tmp_aln(reader(path_fw), reader(path_rv))))
+print(modifier(path_fw, path_rv))
 
 # print(record_F.annotations.keys())
 # dict_keys(["dye", "abif_raw", "sample_well", "run_finish", "machine_model", "run_start", "polymer"])
