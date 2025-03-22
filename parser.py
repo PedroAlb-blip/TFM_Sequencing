@@ -1,7 +1,8 @@
-
-
-
-
+##### This programs are supposed to parse the ab1 forward and reverse files produced by sanger sequencing 
+##### The output of these programs is a consensus sequence between forward and reverse which will be attained using the following steps
+##### 1.- The ab1 files will be parsed to extract sequence information (PBAS2), peak location (PLOC2), and fluorescence values and channels (FWO_1, DATA9 through 12)
+##### 2.- The forward and reverse sequences will be transplanted onto a temporary file and an alignment be made
+##### 3.- From said alignment the position of the first match will be mapped
 
 import subprocess
 import os
