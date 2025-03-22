@@ -16,26 +16,29 @@ from collections import defaultdict
 def tmp_rm():
    for i in range(0, len(os.listdir())):
       check=str("aln_tmp_" + str(i))
+      check_1=str("aln_def_" + str(i))
       if os.path.exists(check):
          os.remove(check)
+      if os.path.exists(check_1):
+         os.remove(check_1)
    return 
 
 tmp_rm()
 
-def tmp_aln(fw, rv):
+def tmp_aln(seq):
    ### This function creates a file with both sequences
    files=os.listdir()
    for i in range(0, len(os.listdir())):
-      check=str("aln_tmp_" + str(i))
+      check=f"aln_tmp_{i}"
       if check in files:
          continue
       else:
          new_tmp=open(check, 'x')
-         new_tmp.write(fw)
-         new_tmp.write(rv)
+         new_tmp.write(seq)
          new_tmp.close()
          break
    return check
+
 
 ### This can be further automated by searching for -F_ or -R_ in the path
 def reader (path, fmt="abi"):
@@ -50,14 +53,15 @@ def reader (path, fmt="abi"):
       sequence = str(">Reverse" + '\n' + sequence + '\n')
       for i in c:
          channels[i] = record.annotations["abif_raw"][i][::-1]
-      ploc = np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1]))
-      
+      # ploc = tuple(np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1])))
+      ploc = [-(j - len(channels["DATA9"])) for j in record.annotations["abif_raw"]["PLOC2"][::-1]]
+
    elif "-F_" in path:
       sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")
       sequence = str(">Forward" + '\n' + sequence +'\n')
       for i in c:
          channels[i] = record.annotations["abif_raw"][i] 
-      ploc = record.annotations["abif_raw"]["PLOC2"]
+      ploc = list(record.annotations["abif_raw"]["PLOC2"])
    return sequence, ploc, channels, guide
 
 
@@ -83,7 +87,7 @@ def aligner(file, v=False):
 
 
 def locator(path_fw, path_rv):
-   all=aligner(tmp_aln(reader(path_fw)[0], reader(path_rv)[0]))
+   all=aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))
    align=all[0]
    fw=all[1]
    rv=all[2]
@@ -107,5 +111,22 @@ def locator(path_fw, path_rv):
 
 path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
 path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
-print(locator(path_fw, path_rv))
 
+file=open("DEFINITIVE.txt", "x")
+file.write(str(reader(path_fw)[0]+reader(path_rv)[0]) + '\n\n\n\n\n')
+file.write(str(reader(path_fw)[1]))
+file.write(str(reader(path_rv)[1]))
+file.write('\n\n\n\n\n')
+file.write(str(reader(path_fw)[2]))
+file.write(str(reader(path_rv)[2]))
+file.write('\n\n\n\n\n')
+file.write(str(reader(path_fw)[3]))
+file.write(str(reader(path_rv)[3]))
+file.write('\n\n\n\n\n')
+file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[0])
+file.write('\n\n\n\n\n')
+file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[1])
+file.write('\n\n\n\n\n')
+file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[2])
+file.write('\n\n\n\n\n')
+file.write(str(locator(path_fw, path_rv)))

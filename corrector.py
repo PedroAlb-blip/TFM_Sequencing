@@ -1,1 +1,1 @@
-#### This file will take the vales stored from parser.py and produce the correction 
+#### This file will take the values stored from parser.py and produce the correction 
