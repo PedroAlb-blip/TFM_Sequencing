@@ -22,6 +22,21 @@ def tmp_rm():
 
 tmp_rm()
 
+def tmp_aln(fw, rv):
+   ### This function creates a file with both sequences
+   files=os.listdir()
+   for i in range(0, len(os.listdir())):
+      check=str("aln_tmp_" + str(i))
+      if check in files:
+         continue
+      else:
+         new_tmp=open(check, 'x')
+         new_tmp.write(fw)
+         new_tmp.write(rv)
+         new_tmp.close()
+         break
+   return check
+
 ### This can be further automated by searching for -F_ or -R_ in the path
 def reader (path, fmt="abi"):
    ### This function takes the path of the forward or reverse, extracts the sequences and produces an object containing the fasta sequence
@@ -45,22 +60,6 @@ def reader (path, fmt="abi"):
       ploc = record.annotations["abif_raw"]["PLOC2"]
    return sequence, ploc, channels, guide
 
-def tmp_aln(fw, rv):
-   ### This function creates a file with both sequences
-   files=os.listdir()
-   for i in range(0, len(os.listdir())):
-      check=str("aln_tmp_" + str(i))
-      if check in files:
-         continue
-      else:
-         new_tmp=open(check, 'x')
-         new_tmp.write(fw)
-         new_tmp.write(rv)
-         new_tmp.close()
-         break
-   return check
-
-# tmp_aln(reader(path_fw), reader(path_rv, True))
 
 def aligner(file, v=False):
    cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "2.0", "--ep", "0.1", file]
