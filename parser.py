@@ -1,5 +1,13 @@
+
+
+
+
+
 import subprocess
 import os
+import numpy as np
+import itertools
+import matplotlib.pyplot as plt
 from Bio import SeqIO
 from collections import defaultdict
 
@@ -16,17 +24,27 @@ tmp_rm()
 def reader (path, fmt="abi"):
    ### This function takes the path of the forward or reverse, extracts the sequences and produces an object containing the fasta sequence
    record = SeqIO.read(path, fmt)
+   c = ["DATA9", "DATA10", "DATA11", "DATA12"]
+   channels = dict()
+   guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "")
    if "-R_" in path:
       sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")[::-1]
-      sequence=sequence.replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
+      sequence = sequence.replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
       sequence = str(">Reverse" + '\n' + sequence + '\n')
+      for i in c:
+         channels[i] = record.annotations["abif_raw"][i][::-1]
+      ploc = np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1]))
+      
    elif "-F_" in path:
       sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")
       sequence = str(">Forward" + '\n' + sequence +'\n')
-   return sequence
+      for i in c:
+         channels[i] = record.annotations["abif_raw"][i] 
+      ploc = record.annotations["abif_raw"]["PLOC2"]
+   return sequence, ploc, channels, guide
 
 def tmp_aln(fw, rv):
-   ### This function creates 
+   ### This function creates a file with both sequences
    files=os.listdir()
    for i in range(0, len(os.listdir())):
       check=str("aln_tmp_" + str(i))
@@ -63,12 +81,12 @@ def aligner(file, v=False):
 
 
 def locator(path_fw, path_rv):
-   all=aligner(tmp_aln(reader(path_fw), reader(path_rv)))
+   all=aligner(tmp_aln(reader(path_fw)[0], reader(path_rv)[0]))
    align=all[0]
    fw=all[1]
    rv=all[2]
-   Forward=reader(path_fw).removeprefix(">Forward\n")
-   Reverse=reader(path_rv).removeprefix(">Reverse\n")
+   Forward=reader(path_fw)[0].removeprefix(">Forward\n")
+   Reverse=reader(path_rv)[0].removeprefix(">Reverse\n")
    i=0
    while i < (len(align)-20):
       kmer=align[i:i+20]
@@ -87,21 +105,5 @@ def locator(path_fw, path_rv):
 
 path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
 path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
-#print(aligner(tmp_aln(reader(path_fw), reader(path_rv))))
 print(locator(path_fw, path_rv))
 
-# print(record_F.annotations.keys())
-# dict_keys(["dye", "abif_raw", "sample_well", "run_finish", "machine_model", "run_start", "polymer"])
-# list(record_F.annotations["abif_raw"].keys())
-# dict_keys(["DATA5", "DATA8", "RUNT1", "phAR1", ..., "DATA6"])
-channels = ["DATA9", "DATA10", "DATA11", "DATA12"]
-trace_F = defaultdict(list)
-trace_R = defaultdict(list)
-record_F = SeqIO.read(path_fw, "abi")
-record_R = SeqIO.read(path_rv, "abi")
-for c in channels:
-    trace_F[c] = record_F.annotations["abif_raw"][c]
-    trace_R[c] = record_R.annotations["abif_raw"][c]
-
-
-#### Extract the normalised data for the chromatogram from the .ab1 file and create a list with it

@@ -1,25 +1,29 @@
 import subprocess
+from Bio import SeqIO
+import itertools
+import numpy as np
+import matplotlib.pyplot as plt
 
 lis = ['nnnnnnnn','actgatctacagatca']
 # lis.reverse()
 print(lis[::-1])
 
-real_sq=open("aln_tmp_0", "r")
-douce=real_sq.readlines()
-Forward=douce[1]
-Reverse=douce[3]
-align = '___________________________________________________________________________________________________________________________________________________________________________________*._****_*.***__.*___*_**********_*_**_*_*************_***_****_************_***************************************_*__**__******************************_*************_*******************_***************************_*************_**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************_***********************************************************_***********************_*****_***********_********************_*********_********_******_*********_**_*__*__._*__*_*****_*_*_**_**_*_**_**_****__*_*__**._.__*_***_*_*__*.._*_**__________________________________________________________________________________________________________________________________________________________________________________________________'
-fw='---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------cnggaagctccttttatgt---atggtattgaatataccacaattctaacttttttgatatcgcttgtatttataaa-ctatatattgaaatcagtaactagaacaatggactttataa--tttacagatttctactggttatagttgtacttgcaccatttataaaaa-cccaaaattatggaattaa-tttgccgataactggatccatggatacaccgtatgcaaatt-ctacagcaagtgagacatttttaacttcaacattatgtttatattatccgaatgaggcagctactgaaattgcagacagtaaatggacagagacattgtcacagttgtttttaacgaaaggatggccgacaggttcagtttactttaaaggttatgcagatattgcatcattttctgtagaaccgcagttatactgtgactataacattgtattaatgaaatatgatgtaagcttgcaattagatatgtctgaattggctgatctaatattaaatgaatggttatgcaatccaatggatataacgctatattattatcaacaaactgatgaggcgaacaaatggatatctatgggttcttcatgtacaattaaagtatgtcccctaaatacacaaacccttggaataggatgttcaaccacagacactaactcatttgaaatggtggctaatgcagagaagttagttataacagatgttgtcgatggagtcaatcacaaactggacgtaacgacaaacacgtgtacnatacgaaattgtaaaaaacttggaccaagggaaaacgttgctgtaattcaggtaggaggnccagatgtacttgatataactgcngatccnactactgcgccccagactgaaagaatgatgcgnataaactggnaaagatgggggcaagncttttatacnatngnngnacnccntnatcaantggngcnagntntgnccnagcgnncccnntccncnnantccccngnnttctttcccnnnnttnnanntntctnagnaaaatgnngnngnncccccannnnnnnnnnnannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn'
-rv='nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnttnnnnnnnnnnnnnttggcctttaaaaaanaagaatttccgnccggncttnngganagctnccttttaatggnagggtattgaat-ttcccccattctaactttttngatntcgcntgtatttataaanctatatattgaaatcagtaactagaacaatggactttatnaatttaccagatttctactggttatagttgtacttgcnccatttataaaaaccccaaaattatggaattaattttgccgataactggatccatggataccccgtatgcaaattnctacagcaagtgagacatttttaacttcaacattatgtttatattatccgaatgaggcagctactgaaattgcagacagtaaatggacagagacattgtcacagttgtttttaacgaaaggatggccgacaggttcagtttactttaaaggttatgcagatattgcatcattttctgtagaaccgcagttatactgtgactataacattgtattaatgaaatatgatgtaagcttgcaattagatatgtctgaattggctgatctaatattaaatgaatggttatgcaatccaatggatataacgctatattattatcaacaaactgatgaggcgaacaaatggatatctatgggttcttcatgtacaattaaagtatgtcccctaaatacacaaacccttggaataggatgttcaaccacagacactaactcatttgaaatggtggctaatgcagagaagttagttataacagatgttgtcgatggagtcaatcacaaactggacgtaacgacaaacacgtgtacaatacgaaattgtaaaaaacttggaccaagggaaaacgttgctgtaattcaggtaggaggtccagatgtacttgatataactgcagatccaactactgcgccacagactgaaagaatgatgcgtataaactggaaaagatggtggcaagtcttttatacaatagtagactacgttaatcaaattgtgcaagttatgtccaagcgatcacgttctctagattccgctgcttctatacc----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------gagtagantt'
-i=0
-while i < (len(align)-20):
-    kmer=align[i:i+20]
-    if kmer.count('*') > 6:
-        pos_1=Forward.index(fw[i + kmer.index('*'):i + 25].upper())
-        print(fw[i + kmer.index('*'):i + 25].upper())
-        pos_2=Reverse.index(rv[i + kmer.index('*'):i + 25].upper())
-        print(rv[i + kmer.index('*'):i + 25].upper())
-        break
-    else:
-        i=i+1
-print(pos_1, pos_2)
+
+record = SeqIO.read("c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1","abi")
+c = ["DATA9", "DATA10", "DATA11", "DATA12"]
+channels = dict()
+for i in c:
+    channels[i] = record.annotations["abif_raw"][i][::-1]
+    print(len(channels[i]))
+ploc = np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1]))
+
+plt.plot(channels["DATA9"][4000:4500], color = "blue")
+plt.plot(channels["DATA10"][4000:4500], color = "green")
+plt.plot(channels["DATA11"][4000:4500], color = "red")
+plt.plot(channels["DATA12"][4000:4500], color = "yellow")
+peaks_purge = [num - 4000 for num in ploc if num >= 4000 and num <= 4500]
+for i in peaks_purge:
+    maxes=max(channels["DATA9"][i+4000], channels["DATA10"][i+4000], channels["DATA11"][i+4000], channels["DATA12"][i+4000])
+    plt.plot(i, maxes, "co")
+
+plt.show()
