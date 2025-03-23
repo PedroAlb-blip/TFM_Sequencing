@@ -16,11 +16,8 @@ from collections import defaultdict
 def tmp_rm():
    for i in range(0, len(os.listdir())):
       check=str("aln_tmp_" + str(i))
-      check_1=str("aln_def_" + str(i))
       if os.path.exists(check):
          os.remove(check)
-      if os.path.exists(check_1):
-         os.remove(check_1)
    return 
 
 tmp_rm()
@@ -31,7 +28,13 @@ def tmp_aln(seq):
    for i in range(0, len(os.listdir())):
       check=f"aln_tmp_{i}"
       if check in files:
-         continue
+         current_tmp = open(check, "r")
+         line = current_tmp.read()
+         if seq in line:
+            current_tmp.close()
+            break
+         else:
+            continue
       else:
          new_tmp=open(check, 'x')
          new_tmp.write(seq)
@@ -106,27 +109,36 @@ def locator(path_fw, path_rv):
          i=i+1
    return pos_1, pos_2
 
+
+def main(path_fw, path_rv):
+   try:
+      name=path_fw.split("\\")[-1].split("_")[2] + ".txt"
+      file=open(name, "x")
+   except IOError:
+      return
+   file.write("BASECALLER_SEQUENCES" + '\n' + str(reader(path_fw)[0]+reader(path_rv)[0]) + '\n\n\n\n\n')
+   file.write('\n' + "PEAK_LOC_FW" + '\n' + str(reader(path_fw)[1]))
+   file.write('\n' + "PEAK_LOC_RV" + '\n' + str(reader(path_rv)[1]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "CHANNELS_FW" + '\n' + str(reader(path_fw)[2]))
+   file.write('\n' + "CHANNELS_RV" + '\n' + str(reader(path_rv)[2]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "GUIDE_FW" + '\n' + str(reader(path_fw)[3]))
+   file.write('\n' + "GUIDE_RV" + '\n' + str(reader(path_rv)[3]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNMENT" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[0])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNED_FW" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[1])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNED_RV" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[2])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "LOCATORS" + '\n' + str(locator(path_fw, path_rv)))
+   return
+
 ##### VERY IMPORTANT: POSITIONS OF PLOC CHANGE RELATIVE TO THE SEQUENCE WHEN DOING A REVERSE COMPLEMENT 
 ##### Perchance doing the absolute value of the subtraction between the PLOCs and the total length 14000
 
 path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
 path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
 
-file=open("DEFINITIVE.txt", "x")
-file.write(str(reader(path_fw)[0]+reader(path_rv)[0]) + '\n\n\n\n\n')
-file.write(str(reader(path_fw)[1]))
-file.write(str(reader(path_rv)[1]))
-file.write('\n\n\n\n\n')
-file.write(str(reader(path_fw)[2]))
-file.write(str(reader(path_rv)[2]))
-file.write('\n\n\n\n\n')
-file.write(str(reader(path_fw)[3]))
-file.write(str(reader(path_rv)[3]))
-file.write('\n\n\n\n\n')
-file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[0])
-file.write('\n\n\n\n\n')
-file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[1])
-file.write('\n\n\n\n\n')
-file.write(aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[2])
-file.write('\n\n\n\n\n')
-file.write(str(locator(path_fw, path_rv)))
+main(path_fw, path_rv)
