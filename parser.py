@@ -68,12 +68,10 @@ def reader (path, fmt="abi"):
    return sequence, ploc, channels, guide
 
 
-def aligner(file, v=False):
+def aligner(file):
    cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "2.0", "--ep", "0.1", file]
    process = subprocess.run(cmd, capture_output=True, text=True)
    matches = process.stdout.split('\n')
-   if v==True:
-      print(process.stdout)
    fw_seq=""
    rv_seq=""
    match_seq=""
@@ -138,7 +136,17 @@ def main(path_fw, path_rv):
 ##### VERY IMPORTANT: POSITIONS OF PLOC CHANGE RELATIVE TO THE SEQUENCE WHEN DOING A REVERSE COMPLEMENT 
 ##### Perchance doing the absolute value of the subtraction between the PLOCs and the total length 14000
 
-path_fw="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_60_Sp101b-VP7_RV-VP7-F_2025-02-24.ab1"
-path_rv="c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1"
 
-main(path_fw, path_rv)
+path_folder = "c:\\Users\\Pedro\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116"
+file_list = [j for j in os.listdir(path_folder) if ".ab1" in j]
+files = [file.split("_")[2] for file in file_list]
+file_purge = dict(enumerate(files))
+egrup_elif = {v : k for k, v in file_purge.items()}
+unique = list(egrup_elif.keys())
+for i in unique:
+    for j in file_list:
+        if i in j and "-F_" in j:
+            fw = str(path_folder + "\\" + j)
+        elif i in j and "-R_" in j:
+            rv = str(path_folder + "\\" + j)
+    main(fw, rv)
