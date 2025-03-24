@@ -49,7 +49,6 @@ def reader (path, fmt="abi"):
    record = SeqIO.read(path, fmt)
    c = ["DATA9", "DATA10", "DATA11", "DATA12"]
    channels = dict()
-   guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "")
    if "-R_" in path:
       sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")[::-1]
       sequence = sequence.replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
@@ -58,6 +57,7 @@ def reader (path, fmt="abi"):
          channels[i] = record.annotations["abif_raw"][i][::-1]
       # ploc = tuple(np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1])))
       ploc = [-(j - len(channels["DATA9"])) for j in record.annotations["abif_raw"]["PLOC2"][::-1]]
+      guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "").replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
 
    elif "-F_" in path:
       sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")
@@ -65,6 +65,7 @@ def reader (path, fmt="abi"):
       for i in c:
          channels[i] = record.annotations["abif_raw"][i] 
       ploc = list(record.annotations["abif_raw"]["PLOC2"])
+      guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "")
    return sequence, ploc, channels, guide
 
 

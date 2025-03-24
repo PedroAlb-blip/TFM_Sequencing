@@ -27,6 +27,18 @@ A_fw = []; A_rv = []
 C_fw = []; C_rv = []
 G_fw = []; G_rv = []
 T_fw = []; T_rv = []
+
+#### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
+
+for i in ploc_fw[0:100]:
+    sums = sum([channels_fw[c][i] for c in channels])
+    cands = max([channels_fw[c][i]/sums for c in channels if sums !=0])
+
+for i in ploc_rv[-100:-1]:
+    sums = sum([channels_rv[c][i] for c in channels])
+    cands = max([channels_rv[c][i]/sums for c in channels if sums !=0])
+    print(cands)
+
 # for i in range(locs[0][0], locs[0][1]):
 
 
