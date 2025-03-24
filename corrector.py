@@ -7,3 +7,31 @@
 #### 1.- Eliminate insertions by cross checking the local peak list
 #### 2.- Wherever there is a mismatch do the sum of channels and verify the nucleotide in either forward or reverse
 #### 3.- Alter the forward and reverse sequence and make a new alignment
+import ast
+import matplotlib.pyplot as plt
+file = open("Sp101b-VP7.txt", "r")
+data = file.read()
+all = list(filter(('').__ne__, data.split('\n')))
+###### IMPORTANT INFORMATION IN: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 and 24
+channels = ["DATA9", "DATA10", "DATA11", "DATA12"]
+channels_fw = ast.literal_eval(all[10])
+channels_rv = ast.literal_eval(all[12])
+ploc_fw = ast.literal_eval(all[6])
+ploc_rv = ast.literal_eval(all[8])
+locs = ast.literal_eval(all[24])
+guide = all[16]
+fw_seq = all[2]
+rv_seq = all[4]
+
+A_fw = []; A_rv = []
+C_fw = []; C_rv = []
+G_fw = []; G_rv = []
+T_fw = []; T_rv = []
+# for i in range(locs[0][0], locs[0][1]):
+
+
+# for j in range(locs[1][0], locs[1][1]):
+
+
+# plt.plot(list(channels_fw.values())[0], "blue")
+# plt.show()

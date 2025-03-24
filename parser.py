@@ -96,16 +96,23 @@ def locator(path_fw, path_rv):
    Reverse=reader(path_rv)[0].removeprefix(">Reverse\n")
    i=0
    while i < (len(align)-20):
-      kmer=align[i:i+20]
-      if kmer.count('*') > 6:
-         pos_1=Forward.index(fw[i + kmer.index('*'):i + 25].upper())
-         # print(fw[i + kmer.index('*'):i + 25].upper())
-         pos_2=Reverse.index(rv[i + kmer.index('*'):i + 25].upper())
-         # print(rv[i + kmer.index('*'):i + 25].upper())
+      kmer_fw=align[i:i+20]
+      if kmer_fw.count('*') > 10:
+         pos_1=Forward.index(fw[i + kmer_fw.index('*'):i + 25].replace("-","").upper())
+         pos_2=Reverse.index(rv[i + kmer_fw.index('*'):i + 25].replace("-","").upper())
          break
       else:
          i=i+1
-   return pos_1, pos_2
+   i = -21
+   while i > (-len(align)+20):
+      kmer_bw=align[i:i+20]
+      if kmer_bw.count('*') > 10:
+         pos_3=Forward.index(fw[i - 30 : i - (len(kmer_bw) - kmer_bw.index('*'))].replace("-","").upper())
+         pos_4=Reverse.index(rv[i - 30 : i - (len(kmer_bw) -  kmer_bw.index('*'))].replace("-","").upper())
+         break
+      else:
+         i=i-1
+   return [pos_1, pos_3], [pos_2, pos_4]
 
 
 def main(path_fw, path_rv):
@@ -113,7 +120,7 @@ def main(path_fw, path_rv):
       name=path_fw.split("\\")[-1].split("_")[2] + ".txt"
       file=open(name, "x")
    except IOError:
-      return
+      file=open(name, "w")
    file.write("BASECALLER_SEQUENCES" + '\n' + str(reader(path_fw)[0]+reader(path_rv)[0]) + '\n\n\n\n\n')
    file.write('\n' + "PEAK_LOC_FW" + '\n' + str(reader(path_fw)[1]))
    file.write('\n' + "PEAK_LOC_RV" + '\n' + str(reader(path_rv)[1]))
