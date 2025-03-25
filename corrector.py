@@ -9,6 +9,8 @@
 #### 3.- Alter the forward and reverse sequence and make a new alignment
 import ast
 import matplotlib.pyplot as plt
+
+
 file = open("Sp101b-VP7.txt", "r")
 data = file.read()
 all = list(filter(('').__ne__, data.split('\n')))
@@ -19,7 +21,8 @@ channels_rv = ast.literal_eval(all[12])
 ploc_fw = ast.literal_eval(all[6])
 ploc_rv = ast.literal_eval(all[8])
 locs = ast.literal_eval(all[24])
-guide = all[16]
+guide_fw = all[14]
+guide_rv = all [16]
 fw_seq = all[2]
 rv_seq = all[4]
 
@@ -29,15 +32,28 @@ G_fw = []; G_rv = []
 T_fw = []; T_rv = []
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
+def confidence(peaks, dol): 
+    conl = []
+    rm_base = []
+    for i in peaks:
+        sums = sum([dol[c][i] for c in dol.keys()])
+        try:
+            conme = max([dol[c][i]/sums for c in dol.keys()])
+        except ZeroDivisionError:
+            rm_base.append(peaks.index(i))
+            peaks.pop(peaks.index(i))
+        conl.append(conme)
+    return conl, rm_base
 
-for i in ploc_fw[0:100]:
-    sums = sum([channels_fw[c][i] for c in channels])
-    cands = max([channels_fw[c][i]/sums for c in channels if sums !=0])
+def peak_discovery(dol, guide):
+    tmp_lst = list(dol.keys())
+    for i in range(0, len(dol.keys())):
+        dol[guide[i]] = dol.pop(str(tmp_lst[i]))
+    
+    return dol
 
-for i in ploc_rv[-100:-1]:
-    sums = sum([channels_rv[c][i] for c in channels])
-    cands = max([channels_rv[c][i]/sums for c in channels if sums !=0])
-    print(cands)
+
+
 
 # for i in range(locs[0][0], locs[0][1]):
 

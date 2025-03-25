@@ -8,7 +8,7 @@
 import subprocess
 import os
 import numpy as np
-import itertools
+import shutil
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 from collections import defaultdict
@@ -104,6 +104,7 @@ def locator(path_fw, path_rv):
          break
       else:
          i=i+1
+   aln_fw_ind = i
    i = -21
    while i > (-len(align)+20):
       kmer_bw=align[i:i+20]
@@ -113,7 +114,8 @@ def locator(path_fw, path_rv):
          break
       else:
          i=i-1
-   return [pos_1, pos_3], [pos_2, pos_4]
+   aln_rv_ind = len(align) + i
+   return [pos_1, pos_3], [pos_2, pos_4], aln_fw_ind, aln_rv_ind
 
 
 def main(path_fw, path_rv):
@@ -139,6 +141,7 @@ def main(path_fw, path_rv):
    file.write('\n' + "ALIGNED_RV" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[2])
    file.write('\n\n\n\n\n')
    file.write('\n' + "LOCATORS" + '\n' + str(locator(path_fw, path_rv)))
+   file.close()
    return
 
 ##### VERY IMPORTANT: POSITIONS OF PLOC CHANGE RELATIVE TO THE SEQUENCE WHEN DOING A REVERSE COMPLEMENT 
@@ -158,3 +161,4 @@ for i in unique:
         elif i in j and "-R_" in j:
             rv = str(path_folder + "\\" + j)
     main(fw, rv)
+tmp_rm()
