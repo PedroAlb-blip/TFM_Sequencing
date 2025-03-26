@@ -35,25 +35,50 @@ T_fw = []; T_rv = []
 def confidence(peaks, dol): 
     conl = []
     rm_base = []
+    intens = []
     for i in peaks:
         sums = sum([dol[c][i] for c in dol.keys()])
+        intens.append(max([dol[c][i] for c in dol.keys()]))
         try:
             conme = max([dol[c][i]/sums for c in dol.keys()])
         except ZeroDivisionError:
             rm_base.append(peaks.index(i))
-            peaks.pop(peaks.index(i))
         conl.append(conme)
-    return conl, rm_base
+    return conl, intens, rm_base
 
 def peak_discovery(dol, guide):
     tmp_lst = list(dol.keys())
     for i in range(0, len(dol.keys())):
         dol[guide[i]] = dol.pop(str(tmp_lst[i]))
-    
-    return dol
+    keys = list(dol.keys())
+    peaks_key = {}
+    lop = []
+    for key in keys:
+        key_list=[]
+        for i in range(2, len(dol[key])-2):
+            if dol[key][i] - dol[key][i-1] < 0 and dol[key][i-1] - dol[key][i-2] > 0: #and dol[key][i] != 0 and dol[key][i-1] != 0 and dol[key][i-2] != 0
+                key_list.append(i)
+        peaks_key[key] = key_list
+        lop = lop + peaks_key[key]
+    lop.sort()
+    return peaks_key, lop
 
+all_peaks = peak_discovery(channels_fw, guide_fw)[1]
+new_peaks = all_peaks.copy()
+tmp_lst = list(ploc_fw).copy()
+for i in all_peaks:
+    for j in ploc_fw:
+        if i in range(j-5, j+5) and i in new_peaks and j in tmp_lst:
+            # print(i, j)
+            try:
+                tmp_lst.remove(j)
+                new_peaks.remove(i)
+            except ValueError:
+                pass
 
+print(confidence(tmp_lst, channels_fw)[0], confidence(new_peaks, channels_fw)[0])
 
+print(confidence(tmp_lst, channels_fw)[1], confidence(new_peaks, channels_fw)[1])
 
 # for i in range(locs[0][0], locs[0][1]):
 
