@@ -12,6 +12,10 @@
 #### 3.- Alter the forward and reverse sequence and make a new alignment
 import ast
 import matplotlib.pyplot as plt
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
 def confidence(peaks, dol): 
@@ -56,9 +60,9 @@ def peak_discovery(dol):
     lop.sort()
     return peaks_key, lop #### This returns the peaks as a dictionary and as a list
 
-def jiggler(ploc, dol): #### This function will return a list of jiggled peak locations as severance that they are locally peaks
+def jiggler(lop, dol): #### This function will return a list of jiggled peak locations as severance that they are locally peaks
     new = []
-    for i in ploc:
+    for i in lop:
         local_max = []
         contester_up = []
         contester_dwn = []
@@ -67,7 +71,7 @@ def jiggler(ploc, dol): #### This function will return a list of jiggled peak lo
             contester_up = contester_up + list(dol[c][i : i + 3])
             contester_dwn = contester_dwn + list(dol[c][i - 3 : i])[::-1]
         if max(contester_up) > max(local_max) or max(contester_dwn) > max(local_max):
-            if max(contester_up) > max(contester_dwn):
+            if max(contester_up) >= max(contester_dwn):
                 new.append(i + contester_up.index(max(contester_up)) % 3)
             elif max(contester_dwn) > max(contester_up):
                 new.append(i - contester_dwn.index(max(contester_dwn)) % 3)
@@ -80,7 +84,7 @@ def cross_check(dol, lop):
     all_peaks = peak_discovery(dol)[1]
     new_peaks = all_peaks.copy()
     ploc_fw = jiggler(lop, dol)
-    tmp_lst = lop.copy()
+    tmp_lst = list(lop.copy())
     full_on = []
     for i in all_peaks:
         for j in ploc_fw:
@@ -94,6 +98,68 @@ def cross_check(dol, lop):
     return full_on, new_peaks, tmp_lst
 
 
+def width(dol, lop):
+    amplitude = []
+    for i in lop:
+        peaks_dist = []
+        j = i
+        for c in dol.keys():
+            if dol[c][i] is max([dol[k][i] for k in dol.keys()]):
+                peaks_dist.append(i)
+                while dol[c][i] > 0:
+                    i = i + 1
+                while dol[c][j] > 0:
+                    j = j - 1
+                amplitude.append(i - j)
+                break
+    return amplitude
+
+def filterer(dol, lop, alignment, locs):  
+    better_peaks = jiggler(lop, dol)
+    every = confidence(better_peaks, dol)
+    conf = every[0]
+    intens = every[1]
+    peakdis = every[2]
+    amp = width(dol, better_peaks)
+    checkers = cross_check(dol, better_peaks)[0]
+    duplic = []
+    der_1 = []
+    der_2 = []
+    result = []
+    if max([dol[k][0] for k in dol.keys()]) < 100:
+        loc = locs[1]
+    elif max([dol[k][0] for k in dol.keys()]) > 600:
+        loc = locs[0]
+    for i in lop:
+        if i in checkers:
+            duplic.append(0)
+        else:
+            duplic.append(1)
+    for i in better_peaks:
+        for c in dol.keys():
+            if dol[c][i] == max([dol[k][i] for k in dol.keys()]):
+                der_1.append(dol[c][i] - dol[c][i - 1])
+                der_2.append(dol[c][i + 1] - dol[c][i])
+                break
+    j = 0
+    for i in range(0,len(lop)):
+        if intens[i - j]/conf[i - j] > 1200 or conf[i - j] < 0.6:
+            result.append(0)
+        elif intens[i - j] < 100:
+            result.append(0)
+        elif alignment[i + loc[0]] == "*":
+            result.append(1)
+        else:
+            conf.pop(i - j)
+            intens.pop(i - j)
+            duplic.pop(i - j)
+            amp.pop(i - j)
+            peakdis.pop(i - j)
+            der_1.pop(i - j)
+            der_2.pop(i - j)
+            j = j + 1
+    return conf, intens, duplic, amp, peakdis, der_1, der_2, result
+#### True is 0 and False is 1
 file = open("Sp101b-VP7.txt", "r")
 data = file.read()
 all = list(filter(('').__ne__, data.split('\n')))
@@ -103,32 +169,22 @@ channels_rv = ast.literal_eval(all[12])
 ploc_fw = ast.literal_eval(all[6])
 ploc_rv = ast.literal_eval(all[8])
 locs = ast.literal_eval(all[24])
+align = all[18]
 guide_fw = all[14]
 guide_rv = all [16]
 fw_seq = all[2]
 rv_seq = all[4]
 
 
+print(filterer(channels_fw, ploc_fw, align, locs)[2])
 
 
-amplitude = []
-real_peak = {}
-for c in channels_fw.keys():
-    peaks_dist = []
-    for i in ploc_fw:
-        j = i
-        if channels_fw[c][i] is max([channels_fw[k][i] for k in channels_fw.keys()]):
-            while channels_fw[c][i] != 0:
-                i = i + 1
-            while channels_fw[c][j] != 0:
-                j = j - 1
-            amplitude.append(i - j)
-            peaks_dist.append(i)
-    real_peak[c] = peaks_dist
+#### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
+#### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
+#### MATCHES WITHIN THE ALIGNMENT CAN BE USED FOR TRANING 
 
-        
+print(locs)
 
-# print(amplitude, real_peak)
 
 # print(confidence(tmp_lst, channels_fw)[0], confidence(new_peaks, channels_fw)[0])
 
