@@ -13,9 +13,9 @@
 import ast
 import matplotlib.pyplot as plt
 import numpy as np
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Activation
+import tensorflow as tf
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.layers import Dense, Activation
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
 def confidence(peaks, dol): 
@@ -84,18 +84,18 @@ def cross_check(dol, lop):
     all_peaks = peak_discovery(dol)[1]
     new_peaks = all_peaks.copy()
     ploc_fw = jiggler(lop, dol)
-    tmp_lst = list(lop.copy())
+    ploc = list(lop).copy()
     full_on = []
     for i in all_peaks:
         for j in ploc_fw:
-            if j in list(range(i-2, i+3)) and i in new_peaks and j in tmp_lst:
+            if j in list(range(i-2, i+3)) and i in new_peaks and j in ploc:
                 try:
-                    tmp_lst.remove(j)
+                    ploc.remove(j)
                     new_peaks.remove(i)
                     full_on.append(i)
                 except ValueError:
                     pass
-    return full_on, new_peaks, tmp_lst
+    return full_on, new_peaks, ploc
 
 
 def width(dol, lop):
@@ -183,7 +183,27 @@ guide_rv = all [16]
 fw_seq = all[2]
 rv_seq = all[4]
 
-print(filterer(channels_fw, ploc_fw, align, locs))
+
+train = filterer(channels_fw, ploc_fw, align, locs)
+
+trainX = np.array(train[0])
+
+trainY = np.array(train[1])
+
+model = Sequential()
+
+model.add(Dense(8, input_dim=7, activation='relu'))
+model.add(Dense(1))
+model.compile(loss='mean_squared_error', optimizer='adam')
+model.fit(trainX, trainY, epochs=200, batch_size=32, verbose=1)
+
+dataPrediction = model.predict(np.array(filterer(channels_fw, ploc_fw, align, locs, train=False)))
+pred = list(np.ndarray.flatten(dataPrediction))
+dataPrediction = model.predict(np.array(filterer(channels_fw, cross_check(channels_fw, ploc_fw)[1], align, locs, train=False)))
+other = list(np.ndarray.flatten(dataPrediction))
+print(pred)
+print('\n\n')
+print(other)
 
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
 #### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
