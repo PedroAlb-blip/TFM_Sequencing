@@ -12,10 +12,10 @@
 #### 3.- Alter the forward and reverse sequence and make a new alignment
 import ast
 import matplotlib.pyplot as plt
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+import numpy as np
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Activation
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
 def confidence(peaks, dol): 
@@ -114,7 +114,7 @@ def width(dol, lop):
                 break
     return amplitude
 
-def filterer(dol, lop, alignment, locs):  
+def filterer(dol, lop, alignment, locs, train = True):  
     better_peaks = jiggler(lop, dol)
     every = confidence(better_peaks, dol)
     conf = every[0]
@@ -127,9 +127,9 @@ def filterer(dol, lop, alignment, locs):
     der_2 = []
     result = []
     if max([dol[k][0] for k in dol.keys()]) < 100:
-        loc = locs[1]
+        loc = locs[2] - locs[0][0]
     elif max([dol[k][0] for k in dol.keys()]) > 600:
-        loc = locs[0]
+        loc = locs[2] - locs[1][0]
     for i in lop:
         if i in checkers:
             duplic.append(0)
@@ -142,23 +142,31 @@ def filterer(dol, lop, alignment, locs):
                 der_2.append(dol[c][i + 1] - dol[c][i])
                 break
     j = 0
-    for i in range(0,len(lop)):
-        if intens[i - j]/conf[i - j] > 1200 or conf[i - j] < 0.6:
-            result.append(0)
-        elif intens[i - j] < 100:
-            result.append(0)
-        elif alignment[i + loc[0]] == "*":
-            result.append(1)
-        else:
-            conf.pop(i - j)
-            intens.pop(i - j)
-            duplic.pop(i - j)
-            amp.pop(i - j)
-            peakdis.pop(i - j)
-            der_1.pop(i - j)
-            der_2.pop(i - j)
-            j = j + 1
-    return conf, intens, duplic, amp, peakdis, der_1, der_2, result
+    joined = []
+    if train == True:
+        for i in range(0,len(lop)):
+            joined.append([conf[i - j], intens[i - j], duplic[i - j], amp[i - j], peakdis[i - j], der_1[i - j], der_2[i - j]])
+            if intens[i - j] > 1200 or conf[i - j] < 0.6:
+                result.append(0)
+            elif intens[i - j] < 100:
+                result.append(0)
+            elif alignment[i + loc] == "*":
+                result.append(1)
+            else:
+                conf.pop(i - j)
+                intens.pop(i - j)
+                duplic.pop(i - j)
+                amp.pop(i - j)
+                peakdis.pop(i - j)
+                der_1.pop(i - j)
+                der_2.pop(i - j)
+                joined.pop(-1)
+                j = j + 1
+        return joined, result
+    else:
+        for i in range(0,len(lop)):
+            joined.append([conf[i], intens[i], duplic[i], amp[i], peakdis[i], der_1[i], der_2[i]])
+        return joined
 #### True is 0 and False is 1
 file = open("Sp101b-VP7.txt", "r")
 data = file.read()
@@ -175,31 +183,17 @@ guide_rv = all [16]
 fw_seq = all[2]
 rv_seq = all[4]
 
-
-print(filterer(channels_fw, ploc_fw, align, locs)[2])
-
+print(filterer(channels_fw, ploc_fw, align, locs))
 
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
 #### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
 #### MATCHES WITHIN THE ALIGNMENT CAN BE USED FOR TRANING 
 
-print(locs)
-
-
 # print(confidence(tmp_lst, channels_fw)[0], confidence(new_peaks, channels_fw)[0])
-
 # print(confidence(tmp_lst, channels_fw)[1], confidence(new_peaks, channels_fw)[1])
-
-
 # rename(channels_fw, guide_fw)
-
 # print(jiggler(ploc_fw, channels_fw))
-
 # for i in range(locs[0][0], locs[0][1]):
-
-
 # for j in range(locs[1][0], locs[1][1]):
-
-
 # plt.plot(list(channels_fw.values())[0], "blue")
 # plt.show()
