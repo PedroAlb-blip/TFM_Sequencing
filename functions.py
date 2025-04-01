@@ -1,19 +1,6 @@
-#### This file will take the values stored from parser.py and produce the correction 
-#### IDEAS:
-#### 1.- Look for local peaks and produce a list containing them (all of them)
-#### 2.- Cross check the PLOC lists of both forward and reverse
-#### 3.- This will provide two lists:
-####    One of unrealised peaks (present in discovery yet absent from the basecaller)
-####    One of false peaks (present in basecaller, absent in discovery)
-#### These should provide useful data regarding non-aligned regions
-#### For aligned regions:
-#### 1.- Eliminate insertions by cross checking the local peak list
-#### 2.- Wherever there is a mismatch do the sum of channels and verify the nucleotide in either forward or reverse
-#### 3.- Alter the forward and reverse sequence and make a new alignment
-import ast
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Activation
-import numpy as np
+import os
+import subprocess
+from Bio import SeqIO
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
 def confidence(peaks, dol): 
@@ -165,50 +152,135 @@ def filterer(dol, lop, alignment, locs, train = True):
         for i in range(0,len(lop)):
             joined.append([conf[i], intens[i], duplic[i], amp[i], peakdis[i], der_1[i], der_2[i], i])
         return joined
-#### True is 0 and False is 1
-file = open("Sp101b-VP7.txt", "r")
-data = file.read()
-all = list(filter(('').__ne__, data.split('\n')))
-###### IMPORTANT INFORMATION IN: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 and 24
-channels_fw = ast.literal_eval(all[10])
-channels_rv = ast.literal_eval(all[12])
-ploc_fw = ast.literal_eval(all[6])
-ploc_rv = ast.literal_eval(all[8])
-locs = ast.literal_eval(all[24])
-align = all[18]
-guide_fw = all[14]
-guide_rv = all [16]
-fw_seq = all[2]
-rv_seq = all[4]
+    
+    
+def tmp_rm():
+   for i in range(0, len(os.listdir())):
+      check=str("aln_tmp_" + str(i))
+      if os.path.exists(check):
+         os.remove(check)
+   return 
+
+tmp_rm()
+
+def tmp_aln(seq):
+   ### This function creates a file with both sequences
+   files=os.listdir()
+   for i in range(0, len(os.listdir())):
+      check=f"aln_tmp_{i}"
+      if check in files:
+         current_tmp = open(check, "r")
+         line = current_tmp.read()
+         if seq in line:
+            current_tmp.close()
+            break
+         else:
+            continue
+      else:
+         new_tmp=open(check, 'x')
+         new_tmp.write(seq)
+         new_tmp.close()
+         break
+   return check
 
 
-train = filterer(channels_fw, ploc_fw, align, locs)
-trainX = np.array(train[0])
-trainY = np.array(train[1])
-model = Sequential()
+### This can be further automated by searching for -F_ or -R_ in the path
+def reader (path, fmt="abi"):
+   ### This function takes the path of the forward or reverse, extracts the sequences and produces an object containing the fasta sequence
+   record = SeqIO.read(path, fmt)
+   c = ["DATA9", "DATA10", "DATA11", "DATA12"]
+   channels = dict()
+   if "-R_" in path:
+      sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")[::-1]
+      sequence = sequence.replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
+      sequence = str(">Reverse" + '\n' + sequence + '\n')
+      for i in c:
+         channels[i] = record.annotations["abif_raw"][i][::-1]
+      # ploc = tuple(np.subtract(list(itertools.repeat(len(channels["DATA9"]), len(record.annotations["abif_raw"]["PLOC2"]))), list(record.annotations["abif_raw"]["PLOC2"][::-1])))
+      ploc = [-(j - len(channels["DATA9"])) for j in record.annotations["abif_raw"]["PLOC2"][::-1]]
+      guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "").replace("A","Z").replace("G","X").replace("T","A").replace("C","G").replace("Z","T").replace("X","C")
 
-model.add(Dense(8, input_dim=8, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(trainX, trainY, epochs=200, batch_size=32, verbose=1)
+   elif "-F_" in path:
+      sequence = str(record.annotations["abif_raw"]["PBAS2"]).replace("b","").replace("'","")
+      sequence = str(">Forward" + '\n' + sequence +'\n')
+      for i in c:
+         channels[i] = record.annotations["abif_raw"][i] 
+      ploc = list(record.annotations["abif_raw"]["PLOC2"])
+      guide = str(record.annotations["abif_raw"]["FWO_1"]).replace("b","").replace("'", "")
+   return sequence, ploc, channels, guide
 
-dataPrediction = model.predict(np.array(filterer(channels_fw, ploc_fw, align, locs, train=False)))
-pred = list(np.ndarray.flatten(dataPrediction))
-dataPrediction = model.predict(np.array(filterer(channels_fw, cross_check(channels_fw, ploc_fw)[1], align, locs, train=False)))
-other = list(np.ndarray.flatten(dataPrediction))
-print(pred)
-print('\n\n')
-print(other)
 
-#### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
-#### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
-#### MATCHES WITHIN THE ALIGNMENT CAN BE USED FOR TRANING 
+def aligner(file):
+   cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "2.0", "--ep", "0.1", file]
+   process = subprocess.run(cmd, capture_output=True, text=True)
+   matches = process.stdout.split('\n')
+   fw_seq=""
+   rv_seq=""
+   match_seq=""
+   for i in matches:
+      if "Forward" in i:
+         fw_seq=fw_seq+(i[16:])
+      elif "Reverse" in i:
+         rv_seq=rv_seq+(i[16:])
+      # A better way to get the alignment must be though of
+      elif len(i)>50:
+         match_seq=match_seq+(i[16:])
+   match_seq=match_seq.replace(" ", "_")
+   return match_seq, fw_seq, rv_seq
 
-# print(confidence(tmp_lst, channels_fw)[0], confidence(new_peaks, channels_fw)[0])
-# print(confidence(tmp_lst, channels_fw)[1], confidence(new_peaks, channels_fw)[1])
-# rename(channels_fw, guide_fw)
-# print(jiggler(ploc_fw, channels_fw))
-# for i in range(locs[0][0], locs[0][1]):
-# for j in range(locs[1][0], locs[1][1]):
-# plt.plot(list(channels_fw.values())[0], "blue")
-# plt.show()
+
+def locator(path_fw, path_rv):
+   all=aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))
+   align=all[0]
+   fw=all[1]
+   rv=all[2]
+   Forward=reader(path_fw)[0].removeprefix(">Forward\n")
+   Reverse=reader(path_rv)[0].removeprefix(">Reverse\n")
+   i=0
+   while i < (len(align)-20):
+      kmer_fw=align[i:i+20]
+      if kmer_fw.count('*') > 10:
+         pos_1=Forward.index(fw[i + kmer_fw.index('*'):i + 25].replace("-","").upper())
+         pos_2=Reverse.index(rv[i + kmer_fw.index('*'):i + 25].replace("-","").upper())
+         break
+      else:
+         i=i+1
+   aln_fw_ind = i
+   i = -21
+   while i > (-len(align)+20):
+      kmer_bw=align[i:i+20]
+      if kmer_bw.count('*') > 10:
+         pos_3=Forward.index(fw[i - 30 : i - (len(kmer_bw) - kmer_bw.index('*'))].replace("-","").upper())
+         pos_4=Reverse.index(rv[i - 30 : i - (len(kmer_bw) -  kmer_bw.index('*'))].replace("-","").upper())
+         break
+      else:
+         i=i-1
+   aln_rv_ind = len(align) + i
+   return [pos_1, pos_3], [pos_2, pos_4], aln_fw_ind, aln_rv_ind
+
+
+def main(path_fw, path_rv):
+   try:
+      name=path_fw.split("\\")[-1].split("_")[2] + ".txt"
+      file=open(name, "x")
+   except IOError:
+      file=open(name, "w")
+   file.write("BASECALLER_SEQUENCES" + '\n' + str(reader(path_fw)[0]+reader(path_rv)[0]) + '\n\n\n\n\n')
+   file.write('\n' + "PEAK_LOC_FW" + '\n' + str(reader(path_fw)[1]))
+   file.write('\n' + "PEAK_LOC_RV" + '\n' + str(reader(path_rv)[1]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "CHANNELS_FW" + '\n' + str(reader(path_fw)[2]))
+   file.write('\n' + "CHANNELS_RV" + '\n' + str(reader(path_rv)[2]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "GUIDE_FW" + '\n' + str(reader(path_fw)[3]))
+   file.write('\n' + "GUIDE_RV" + '\n' + str(reader(path_rv)[3]))
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNMENT" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[0])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNED_FW" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[1])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "ALIGNED_RV" + '\n' + aligner(tmp_aln(reader(path_fw)[0] + reader(path_rv)[0]))[2])
+   file.write('\n\n\n\n\n')
+   file.write('\n' + "LOCATORS" + '\n' + str(locator(path_fw, path_rv)))
+   file.close()
+   return

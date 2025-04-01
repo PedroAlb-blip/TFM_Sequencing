@@ -7,11 +7,7 @@
 
 import subprocess
 import os
-import numpy as np
-import shutil
-import matplotlib.pyplot as plt
 from Bio import SeqIO
-from collections import defaultdict
 
 def tmp_rm():
    for i in range(0, len(os.listdir())):

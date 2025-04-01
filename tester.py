@@ -3,6 +3,8 @@ from Bio import SeqIO
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
+print(tf.__version__)
 
 lst = [12, 14, 15, 16, 22, 24, 26, 27]
 lst.remove(16)
@@ -10,6 +12,8 @@ print(lst[1:4])
 
 lst = list(range(-3, 3))
 print(15 % 7)
+
+
 # record = SeqIO.read("c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1","abi")
 # c = ["DATA9", "DATA10", "DATA11", "DATA12"]
 # channels = dict()
