@@ -59,22 +59,18 @@ def peak_discovery(dol):
     return peaks_key, lop #### This returns the peaks as a dictionary and as a list
 
 def jiggler(lop, dol): #### This function will return a list of jiggled peak locations as severance that they are locally peaks
+    newd = {key : [] for key in dol.keys()}
     new = []
     for i in lop:
-        local_max = []
-        contester_up = []
-        contester_dwn = []
         for c in dol.keys():
-            local_max.append(dol[c][i])
-            contester_up = contester_up + list(dol[c][i : i + 3])
-            contester_dwn = contester_dwn + list(dol[c][i - 3 : i])[::-1]
-        if max(contester_up) > max(local_max) or max(contester_dwn) > max(local_max):
-            if max(contester_up) >= max(contester_dwn):
-                new.append(i + contester_up.index(max(contester_up)) % 3)
-            elif max(contester_dwn) > max(contester_up):
-                new.append(i - contester_dwn.index(max(contester_dwn)) % 3)
-        else:
-            new.append(i)
+            j = i - 3
+            while j < i + 3:
+                if dol[c][j] >= dol[c][j+1] and dol[c][j] > 100 and dol[c][j + 1] > 100:
+                    newd[c].append(j)
+                    new.append(j)
+                    break
+                else:
+                    j = j + 1
     return new
 
 #### This lines of code cross check the discovered peaks and the ploc from the basecaller 
@@ -94,7 +90,6 @@ def cross_check(dol, lop):
                 except ValueError:
                     pass
     return full_on, new_peaks, ploc
-
 
 def width(dol, lop):
     amplitude = []
@@ -183,6 +178,7 @@ rv_seq = all[4]
 
 
 train = filterer(channels_fw, ploc_fw, align, locs)
+print(train)
 trainX = np.array(train[0])
 trainY = np.array(train[1])
 model = Sequential()
@@ -199,7 +195,6 @@ other = list(np.ndarray.flatten(dataPrediction))
 print(pred)
 print('\n\n')
 print(other)
-
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
 #### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
 #### MATCHES WITHIN THE ALIGNMENT CAN BE USED FOR TRANING 
