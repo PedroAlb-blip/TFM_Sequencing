@@ -9,18 +9,18 @@ data = file.read()
 all = list(filter(('').__ne__, data.split('\n')))
 channels_fw = ast.literal_eval(all[10])
 channels_rv = ast.literal_eval(all[12])
-ploc_fw = jiggler(ast.literal_eval(all[6]), channels_fw)
-ploc_rv = jiggler(ast.literal_eval(all[8]), channels_rv)
+ploc_fw = jiggler(ast.literal_eval(all[6]), channels_fw)[1]
+ploc_rv = jiggler(ast.literal_eval(all[8]), channels_rv)[1]
 length = len(ploc_rv)
 locs = ast.literal_eval(all[24])
-align = all[18]
 color=["red", "green", "yellow", "blue"]
 maxes_file = open("training_params.txt", "r")
 maxes_symb = maxes_file.read()
-maxes = ast.literal_eval(maxes_symb)
+maxes = list(ast.literal_eval(maxes_symb))
 results_file = open("results.txt", "r")
 results_symb = results_file.read()
-results = ast.literal_eval(results_symb)
+results = list(ast.literal_eval(results_symb))
+end = len(maxes)
 for i in range(0, length, 50):
     ins_1 = " "
     ins_2 = " "
@@ -40,13 +40,12 @@ for i in range(0, length, 50):
                 maxes.append(int(ins_1))
                 results.append(int(ins_2))
             if ins_1 == "ALL":
-                maxes = maxes + ploc_fw[i:i+50]
+                maxes = maxes + ploc_rv[i:i+50]
                 results = results + 50*[1]
-        print(maxes)
         plt.close()
     except IndexError:
         break
-param = filterer(channels_fw, maxes, align, locs, False)
+param = maxes[0:end] + filterer(channels_rv, maxes[end + 1:-1])
 
 rest = open("results.txt", "w")
 rest.write(str(results))

@@ -1,17 +1,23 @@
-import os
-from Bio import SeqIO
-import re
-import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
-print(tf.__version__)
+import ast
+from functions import jiggler, confidence, filterer
 
-lst = [12, 14, 15, 16, 22, 24, 26, 27]
-lst.remove(16)
-print(lst[1:4])
+file = open("Sp101b-VP7.txt", "r")
+data = file.read()
+all = list(filter(('').__ne__, data.split('\n')))
+channels_fw = ast.literal_eval(all[10])
+channels_rv = ast.literal_eval(all[12])
+ploc_fw = jiggler(ast.literal_eval(all[6]), channels_fw)
+ploc_rv = jiggler(ast.literal_eval(all[8]), channels_rv)
 
-lst = list(range(-3, 3))
-print(15 % 7)
+
+print(filterer(channels_fw, list(ploc_fw[1])))
+
+length = len(ploc_rv)
+locs = ast.literal_eval(all[24])
+align = all[18]
+
+
+
 
 
 # record = SeqIO.read("c:\\Users\\Pedro\\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116\\sec2025-016_91_Sp101b-VP7_RV-VP7-R_2025-02-24.ab1","abi")
