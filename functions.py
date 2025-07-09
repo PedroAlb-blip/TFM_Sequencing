@@ -30,7 +30,7 @@ def confidence(dop, dol):
             peak_dist_fw.append(-1)
         try:
             peak_dist_bw.append(peaks [i] - peaks[i - 1]) #### Value at [-1] exists
-        except IndexError:
+        except i == 0:
             peak_dist_bw.append(-1)
         try:
             vals = [dop[key][0] for key in list(dop.keys())]
@@ -61,27 +61,48 @@ def peak_discovery(dol):
     lop = []
     for key in keys:
         for i in range(2, len(dol[key])):
-            if dol[key][i] - dol[key][i-1] < 0 and dol[key][i-1] - dol[key][i-2] > 0: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
         lop = lop + peaks_key[key]
+    lop.sort()
+    current = lop[0]
+    for j in lop[1:]:
+        if j - current > 15:
+            lop.insert(-1 , current + 12)
+            pos_lst = [dol[key][current + 12] for key in keys]
+            key_val = keys[pos_lst.index(max(pos_lst))]
+            peaks_key[key_val].append(current + 12)
+            peaks_key[key_val].sort()
+        current = j
     lop.sort()
     return peaks_key, lop #### This returns the peaks as a dictionary and as a list
 
 def jiggler(lop, dol): #### This function will return a list of jiggled peak locations as severance that they are locally peaks
-    newd = {key : [] for key in dol.keys()}
+    newd = {key : [] for key in list(dol.keys())}
     new = []
     for i in lop:
         for c in dol.keys():
             j = i - 3
+            success = False
             while j < i + 3:
-                if dol[c][j] >= dol[c][j + 1] and dol[c][j] != 0 and dol[c][j + 1] != 0:
+                if dol[c][j] >= dol[c][j + 1] and dol[c][j] > 50 and dol[c][j + 1] > 50:
                     newd[c].append(j)
                     new.append(j)
+                    success = True
                     break
-                else: 
+                elif dol[c][j] > 50 and dol[c][j + 1] > 50: 
                     j = j + 1
-    return newd, new
-
+                    success = False
+                else:
+                    success = None
+                    break
+            if success == False:
+                newd[c].append(i)
+                new.append(i)
+    new_sort = {key : 0 for key in new}
+    newl = list(new_sort.keys())
+    newl.sort()
+    return newd, newl
 #### This lines of code cross check the discovered peaks and the ploc from the basecaller 
 def cross_check(dol, lop):
     all_peaks = peak_discovery(dol)[1]
@@ -100,50 +121,49 @@ def cross_check(dol, lop):
                     pass
     return full_on, new_peaks, ploc
 
-def width(dol, lop):
-    amplitude = []
-    for i in lop:
-        peaks_dist = []
-        j = i
-        for c in dol.keys():
-            if dol[c][i] is max([dol[k][i] for k in dol.keys()]):
-                peaks_dist.append(i)
-                while dol[c][i] > 0:
-                    i = i + 1
-                while dol[c][j] > 0:
-                    j = j - 1
-                amplitude.append(i - j)
-                break
+def width(dol, dop): #### MUST BE CHANGED AS WELL
+    amplitude = {key : [] for key in list(dop.keys())}
+    for key in list(dop.keys()):
+        for i in dol[key]:
+            j = i
+            while dol[key][i] > 50:
+                i = i + 1
+            while dol[key][j] > 50:
+                j = j - 1
+            amplitude[key].append(i - j)
     return amplitude
 
-def filterer(dol, lop):  
-    all = jiggler(lop, dol)
-    dop_1 = all[0]
-    dop_2 = copy.deepcopy(dop_1)
-    better_lop = list(all[1]) #### Here the jiggler should return a dop a dictionary of peaks CHECK
+def filterer(dol):  
+    # all = jiggler(lop, dol)
+    dop_1 = dol
+    dop_2 = copy.deepcopy(dop_1) #### Here the jiggler should return a dop a dictionary of peaks CHECK
     every = confidence(dop_2, dol) #### This should take into account the channels of the peaks CHECK
     conf = every[0]
     intens = every[1]
     peakdis_1 = every[2]
     peakdis_2 = every[3]
-    amp = width(dol, better_lop)
-    checkers = cross_check(dol, better_lop)[0]
-    duplic = []
+    amp = width(dol, dop_1)
+    # checkers = cross_check(dol, better_lop)[0]
+    # duplic = []
     der_1 = {key : [] for key in list(dol.keys())}
     der_2 = {key : [] for key in list(dol.keys())}
-    for i in better_lop:
-        if i in checkers:
-            duplic.append(0)
-        else:
-            duplic.append(1)
+    # for i in better_lop:
+    #     if i in checkers:
+    #         duplic.append(0)
+    #     else:
+    #         duplic.append(1)
+    fullist = []
     for key in list(dop_1.keys()): #### This must also be changed to account for channel peaks
         for i in list(dop_1[key]):
             der_1[key].append(dol[key][i] - dol[key][i - 1])
             der_2[key].append(dol[key][i + 1] - dol[key][i])
+            fullist.append(i)
     joined = []
     derl1 = []
     derl2 = []
-    for i in range(0,len(better_lop)):
+    ampl = []
+    keys = []
+    for i in range(0,len(fullist)):
         try:
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
         except IndexError:
@@ -153,15 +173,19 @@ def filterer(dol, lop):
                 dop_1.pop(key, None)
                 der_1.pop(key, None)
                 der_2.pop(key, None)
+                amp.pop(key, None)
                 leng = [len(dop_1[key]) for key in list(dop_1.keys())]
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
         derl1.append(der_1[list(dop_1.keys())[vals.index(min(vals))]][0])
         derl2.append(der_2[list(dop_1.keys())[vals.index(min(vals))]][0])
+        ampl.append(amp[list(amp.keys())[vals.index(min(vals))]][0])
         der_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         der_2[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
+        amp[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
-        joined.append([conf[i], intens[i], duplic[i], amp[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], better_lop[i]])
-    return joined
+        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
+        keys.append(key)
+    return joined, keys
     
     
 def tmp_rm():

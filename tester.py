@@ -9,8 +9,7 @@ channels_rv = ast.literal_eval(all[12])
 ploc_fw = jiggler(ast.literal_eval(all[6]), channels_fw)
 ploc_rv = jiggler(ast.literal_eval(all[8]), channels_rv)
 
-
-print(filterer(channels_fw, list(ploc_fw[1])))
+print(len(list(channels_fw.values())[i]) for i in range(0, 3))
 
 length = len(ploc_rv)
 locs = ast.literal_eval(all[24])
