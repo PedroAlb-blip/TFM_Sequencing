@@ -57,21 +57,31 @@ def rename(dol, guide):
 def peak_discovery(dol):
     #### This function works by returning the indices of possible peaks as per the definition of a local maximum
     keys = list(dol.keys())
-    peaks_key = {key : [] for key in keys}
+    peaks_key = {key : [0] for key in keys}
     lop = []
     for key in keys:
         for i in range(2, len(dol[key])):
-            if dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
         lop = lop + peaks_key[key]
     lop.sort()
     current = lop[0]
     for j in lop[1:]:
-        if j - current > 15:
+        if j - current > 15 and j - current < 30:
             lop.insert(-1 , current + 12)
             pos_lst = [dol[key][current + 12] for key in keys]
             key_val = keys[pos_lst.index(max(pos_lst))]
             peaks_key[key_val].append(current + 12)
+            peaks_key[key_val].sort()
+        elif j - current > 30:
+            lop.insert(-1 , current + 12)
+            lop.insert(-1 , current + 26)
+            pos_lst = [dol[key][current + 12] for key in keys]
+            key_val = keys[pos_lst.index(max(pos_lst))]
+            peaks_key[key_val].append(current + 12)
+            pos_lst = [dol[key][current + 26] for key in keys]
+            key_val = keys[pos_lst.index(max(pos_lst))]
+            peaks_key[key_val].append(current + 26)
             peaks_key[key_val].sort()
         current = j
     lop.sort()
@@ -133,9 +143,9 @@ def width(dol, dop): #### MUST BE CHANGED AS WELL
             amplitude[key].append(i - j)
     return amplitude
 
-def filterer(dol):  
+def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, and dop to a dictionary of peaks
     # all = jiggler(lop, dol)
-    dop_1 = dol
+    dop_1 = dop
     dop_2 = copy.deepcopy(dop_1) #### Here the jiggler should return a dop a dictionary of peaks CHECK
     every = confidence(dop_2, dol) #### This should take into account the channels of the peaks CHECK
     conf = every[0]
@@ -169,7 +179,6 @@ def filterer(dol):
         except IndexError:
             leng = [len(dop_1[key]) for key in list(dop_1.keys())]
             while len(leng) != 0 and min(leng) == 0:
-                key = list(dop_1.keys())[leng.index(min(leng))]
                 dop_1.pop(key, None)
                 der_1.pop(key, None)
                 der_2.pop(key, None)
@@ -183,8 +192,9 @@ def filterer(dol):
         der_2[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         amp[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
-        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
+        key = list(dop_1.keys())[vals.index(min(vals))]
         keys.append(key)
+        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
     return joined, keys
     
     
