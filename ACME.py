@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import ast
-from functions import jiggler, filterer, peak_discovery, rename
+from Functions import jiggler, filterer, peak_discovery, rename
 
 file = open("Sp105-VP7.txt", "r")
 data = file.read()
