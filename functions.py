@@ -194,7 +194,7 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         key = list(dop_1.keys())[vals.index(min(vals))]
         keys.append(key)
-        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
+        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)]) ## Here the value for the position in the reverse must be flipped
     return joined, keys
     
     
