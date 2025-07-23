@@ -2,23 +2,21 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import ast
-from Functions import jiggler, filterer, peak_discovery, rename
+from Functions import filterer, peak_discovery, rename
 
-file = open("Sp105-VP7.txt", "r")
+file = open("Sp111-VP7a.txt", "r")
 data = file.read()
 all = list(filter(('').__ne__, data.split('\n')))
 channels_fw = ast.literal_eval(all[10])
 channels_rv = ast.literal_eval(all[12])
 guide_fw = all[14]
 guide_rv = all[16]
-print(guide_rv, guide_fw)
-channels_rv = rename(channels_rv, guide_rv)
+channels_fw = rename(channels_fw, guide_fw)
 # ploc fw ast.literal_eval(all[6]), 
 
-ploc_rv_l = peak_discovery(channels_rv)[1]
-ploc_rv_d = peak_discovery(channels_rv)[0]
-length = len(ploc_rv_l)
-locs = ast.literal_eval(all[24])
+ploc_fw_l = peak_discovery(channels_fw)[1]
+ploc_fw_d = peak_discovery(channels_fw)[0]
+length = len(ploc_fw_l)
 color=["red", "green", "yellow", "blue"]
 maxes = []
 nt = []
@@ -28,18 +26,23 @@ for i in range(0, length, 50):
     ins_1 = " "
     j=0
     try:
-        for c in list(channels_rv.keys()):
-            plt.plot(channels_rv[c][ploc_rv_l[i]:ploc_rv_l[i+50]], color=color[j], label=c)
+        for c in list(channels_fw.keys()):
+            plt.plot(channels_fw[c][ploc_fw_l[i]:ploc_fw_l[i+50]], color=color[j], label=c)
             j=j+1
         plt.legend(loc="upper left")
         list_of_string = []
-        for k in ploc_rv_l[i:i+50]:
-            min_lst = [ploc_rv_d[c][0] for c in list(channels_rv.keys())]
-            min_key = list(channels_rv.keys())[min_lst.index(min(min_lst))]
+        for k in ploc_fw_l[i:i+50]:
+            try:
+                min_lst = [ploc_fw_d[c][0] for c in list(ploc_fw_d.keys())]
+            except IndexError:
+                rmv = [c for c in list(ploc_fw_d.keys()) if len(ploc_fw_d[c]) == 0]
+                ploc_fw_d.pop(str(rmv[0]))
+                min_lst = [ploc_fw_d[c][0] for c in list(ploc_fw_d.keys())]
+            min_key = list(channels_fw.keys())[min_lst.index(min(min_lst))]
             string = str(min_key) + str(k)
             list_of_string.append(string)
-            plt.text(k - ploc_rv_l[i], channels_rv[min_key][k], string)
-            ploc_rv_d[min_key].pop(0)
+            plt.text(k - ploc_fw_l[i], channels_fw[min_key][k], string)
+            ploc_fw_d[min_key].pop(0)
         plt.show(block=False)
         peak = 0
         while ins_1 != "" and ins_1 != "BREAK" and peak < len(list_of_string):
@@ -80,7 +83,7 @@ rest.write(str(nt))
 rest.write('\n')
 rest.write(str(results))
 
-param_list = filterer(channels_rv, peak_discovery(channels_rv)[0])
+param_list = filterer(channels_fw, peak_discovery(channels_fw)[0])
 print(len(param_list[1]))
 print(len(results))
 
@@ -91,3 +94,5 @@ train.write(str(param_list))
 locs = open("locations.txt", "a")
 locs.write('\n')
 locs.write(str(maxes))
+
+ #G9615 
