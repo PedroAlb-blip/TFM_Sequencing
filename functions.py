@@ -144,7 +144,9 @@ def width(dol, dop): #### MUST BE CHANGED AS WELL
     return amplitude
 
 def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, and dop to a dictionary of peaks
-    # all = jiggler(lop, dol)
+    length = min([len(dol[c]) for c in list(dol.keys())])
+    seq_gd = list(dol.keys())
+    seq_gd = "".join(seq_gd)
     dop_1 = dop
     dop_2 = copy.deepcopy(dop_1) #### Here the jiggler should return a dop a dictionary of peaks CHECK
     every = confidence(dop_2, dol) #### This should take into account the channels of the peaks CHECK
@@ -194,7 +196,10 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         key = list(dop_1.keys())[vals.index(min(vals))]
         keys.append(key)
-        joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)]) ## Here the value for the position in the reverse must be flipped
+        if seq_gd == 'CTAG':
+            joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], length - min(vals)]) ## Here the value for the position in the reverse must be flipped
+        elif seq_gd == 'GATC':
+            joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
     return joined, keys
     
     

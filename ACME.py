@@ -4,14 +4,14 @@ import numpy as np
 import ast
 from Functions import filterer, peak_discovery, rename
 
-file = open("Sp111-VP7a.txt", "r")
+file = open("Sp105-VP7.txt", "r")
 data = file.read()
 all = list(filter(('').__ne__, data.split('\n')))
 channels_fw = ast.literal_eval(all[10])
 channels_rv = ast.literal_eval(all[12])
 guide_fw = all[14]
 guide_rv = all[16]
-channels_fw = rename(channels_fw, guide_fw)
+channels_fw = rename(channels_rv, guide_rv)
 # ploc fw ast.literal_eval(all[6]), 
 
 ploc_fw_l = peak_discovery(channels_fw)[1]
@@ -38,7 +38,7 @@ for i in range(0, length, 50):
                 rmv = [c for c in list(ploc_fw_d.keys()) if len(ploc_fw_d[c]) == 0]
                 ploc_fw_d.pop(str(rmv[0]))
                 min_lst = [ploc_fw_d[c][0] for c in list(ploc_fw_d.keys())]
-            min_key = list(channels_fw.keys())[min_lst.index(min(min_lst))]
+            min_key = list(ploc_fw_d.keys())[min_lst.index(min(min_lst))]
             string = str(min_key) + str(k)
             list_of_string.append(string)
             plt.text(k - ploc_fw_l[i], channels_fw[min_key][k], string)
@@ -84,7 +84,7 @@ rest.write('\n')
 rest.write(str(results))
 
 param_list = filterer(channels_fw, peak_discovery(channels_fw)[0])
-print(len(param_list[1]))
+print(param_list)
 print(len(results))
 
 
@@ -94,5 +94,3 @@ train.write(str(param_list))
 locs = open("locations.txt", "a")
 locs.write('\n')
 locs.write(str(maxes))
-
- #G9615 
