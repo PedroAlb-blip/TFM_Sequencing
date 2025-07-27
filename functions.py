@@ -61,7 +61,7 @@ def peak_discovery(dol):
     lop = []
     for key in keys:
         for i in range(2, len(dol[key])):
-            if i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if i not in range(peaks_key[key][-1] - 4, peaks_key[key][-1] + 4) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] >= 40: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
         lop = lop + peaks_key[key]
     lop.sort()

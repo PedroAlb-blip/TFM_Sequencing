@@ -19,9 +19,12 @@ from Functions import filterer, peak_discovery, rename
 
 
 #### True is 0 and False is 1
-file = open("Sp101b-VP7.txt", "r")
-data = file.read()
+file_1 = open("Sp113-VP7a.txt", "r")
+file_2 = open("Sp116-VP7a.txt", "r")
+data = file_1.read()
+datt = file_2.read()
 all = list(filter(('').__ne__, data.split('\n')))
+ali = list(filter(('').__ne__, datt.split('\n')))
 ###### IMPORTANT INFORMATION IN: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 and 24
 channels_fw = ast.literal_eval(all[10])
 channels_rv = ast.literal_eval(all[12])
@@ -34,11 +37,8 @@ align = all[18]
 fw_seq = all[2]
 rv_seq = all[4]
 
-
-train = filterer(channels_fw, peak_discovery(channels_fw))
-print(train)
-trainX = np.array(train[0])
-trainY = np.array(train[1])
+trainX = np.array()
+trainY = np.array()
 model = Sequential()
 
 model.add(Dense(8, input_dim=8, activation='relu'))
@@ -46,7 +46,7 @@ model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='mean_squared_error', optimizer='adam')
 model.fit(trainX, trainY, epochs=200, batch_size=32, verbose=1)
 
-dataPrediction = model.predict(np.array(filterer(channels_fw, peak_discovery(channels_fw))))
+dataPrediction = model.predict(np.array(filterer(channels_fw, peak_discovery(channels_fw)[0])))
 pred = list(np.ndarray.flatten(dataPrediction))
 print(pred)
 print('\n\n')
