@@ -61,7 +61,7 @@ def peak_discovery(dol):
     lop = []
     for key in keys:
         for i in range(2, len(dol[key])):
-            if i not in range(peaks_key[key][-1] - 4, peaks_key[key][-1] + 4) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] >= 40: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if i not in range(peaks_key[key][-1] - 4, peaks_key[key][-1] + 4) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] >= 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
         lop = lop + peaks_key[key]
     lop.sort()
@@ -155,15 +155,8 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
     peakdis_1 = every[2]
     peakdis_2 = every[3]
     amp = width(dol, dop_1)
-    # checkers = cross_check(dol, better_lop)[0]
-    # duplic = []
     der_1 = {key : [] for key in list(dol.keys())}
     der_2 = {key : [] for key in list(dol.keys())}
-    # for i in better_lop:
-    #     if i in checkers:
-    #         duplic.append(0)
-    #     else:
-    #         duplic.append(1)
     fullist = []
     for key in list(dop_1.keys()): #### This must also be changed to account for channel peaks
         for i in list(dop_1[key]):
@@ -175,6 +168,8 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
     derl2 = []
     ampl = []
     keys = []
+    sum_peak = [0]*5
+    sum_conf = [0]*5
     for i in range(0,len(fullist)):
         try:
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
@@ -195,11 +190,20 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
         amp[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         key = list(dop_1.keys())[vals.index(min(vals))]
+        sum_peak.append(intens[i])
+        sum_peak.pop(0)
+        sum_conf.append(conf[i])
+        sum_conf.pop(0)
+        mean_i = 0
+        mean_c = 0
+        for k in range(0,5):
+            mean_i = mean_i + sum_peak[k]
+            mean_c = mean_c + sum_conf[k]
         keys.append(key)
         if seq_gd == 'CTAG':
-            joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], length - min(vals)]) ## Here the value for the position in the reverse must be flipped
+            joined.append([conf[i], intens[i], mean_i/5, mean_c/5, ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], length - min(vals)]) ## Here the value for the position in the reverse must be flipped
         elif seq_gd == 'GATC':
-            joined.append([conf[i], intens[i], ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
+            joined.append([conf[i], intens[i], mean_i/5, mean_c/5, ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
     return joined, keys
     
     
