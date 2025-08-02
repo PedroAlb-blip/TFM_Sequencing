@@ -61,31 +61,45 @@ def peak_discovery(dol):
     lop = []
     for key in keys:
         for i in range(2, len(dol[key])):
-            if i not in range(peaks_key[key][-1] - 4, peaks_key[key][-1] + 4) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i] >= 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i - 1] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
         lop = lop + peaks_key[key]
     lop.sort()
-    current = lop[0]
+    current = int(lop[0])
+    new_pk = []
+    new_d = {k : [] for k in keys}
     for j in lop[1:]:
         if j - current > 15 and j - current < 30:
-            lop.insert(-1 , current + 12)
+            new_pk.append(current + 12)
             pos_lst = [dol[key][current + 12] for key in keys]
             key_val = keys[pos_lst.index(max(pos_lst))]
-            peaks_key[key_val].append(current + 12)
-            peaks_key[key_val].sort()
+            new_d[key_val].append(current + 12)
         elif j - current > 30:
-            lop.insert(-1 , current + 12)
-            lop.insert(-1 , current + 26)
+            new_pk.append(current + 12)
+            new_pk.append(current + 26)
             pos_lst = [dol[key][current + 12] for key in keys]
             key_val = keys[pos_lst.index(max(pos_lst))]
-            peaks_key[key_val].append(current + 12)
+            new_d[key_val].append(current + 12)
             pos_lst = [dol[key][current + 26] for key in keys]
             key_val = keys[pos_lst.index(max(pos_lst))]
-            peaks_key[key_val].append(current + 26)
-            peaks_key[key_val].sort()
+            new_d[key_val].append(current + 26)
         current = j
+    for key in keys:
+        peaks_key[key] = list(peaks_key[key]) + list(new_d[key])
+        peaks_key[key].sort()
+    lop = lop + new_pk
     lop.sort()
-    return peaks_key, lop #### This returns the peaks as a dictionary and as a list
+    seq = []
+    uniq_lop_d = dict(zip(lop[:], [0]*len(lop)))
+    uniq_lop = list(uniq_lop_d.keys())
+    for i in uniq_lop:
+        for key in list(peaks_key.keys()):
+            if i in list(peaks_key[key]):
+                seq.append(key)
+    vals = []
+    for value in peaks_key.values():
+        vals = vals + value 
+    return peaks_key, lop, seq #### This returns the peaks as a dictionary and as a list
 
 def jiggler(lop, dol): #### This function will return a list of jiggled peak locations as severance that they are locally peaks
     newd = {key : [] for key in list(dol.keys())}
@@ -157,54 +171,63 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
     amp = width(dol, dop_1)
     der_1 = {key : [] for key in list(dol.keys())}
     der_2 = {key : [] for key in list(dol.keys())}
-    fullist = []
+    fullist = 0
     for key in list(dop_1.keys()): #### This must also be changed to account for channel peaks
         for i in list(dop_1[key]):
             der_1[key].append(dol[key][i] - dol[key][i - 1])
             der_2[key].append(dol[key][i + 1] - dol[key][i])
-            fullist.append(i)
+            fullist = fullist + 1
     joined = []
     derl1 = []
     derl2 = []
     ampl = []
-    keys = []
-    sum_peak = [0]*5
-    sum_conf = [0]*5
-    for i in range(0,len(fullist)):
+    sum_peak = [0]*10
+    sum_conf = [0]*10
+    sum_amp = [0]*10
+    for i in range(0, fullist):
         try:
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
         except IndexError:
             leng = [len(dop_1[key]) for key in list(dop_1.keys())]
             while len(leng) != 0 and min(leng) == 0:
-                dop_1.pop(key, None)
-                der_1.pop(key, None)
-                der_2.pop(key, None)
-                amp.pop(key, None)
+                ind = leng.index(min(leng))
+                der_1.pop(list(dop_1.keys())[ind], None)
+                der_2.pop(list(dop_1.keys())[ind], None)
+                amp.pop(list(dop_1.keys())[ind], None)
+                dop_1.pop(list(dop_1.keys())[ind], None)
                 leng = [len(dop_1[key]) for key in list(dop_1.keys())]
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
         derl1.append(der_1[list(dop_1.keys())[vals.index(min(vals))]][0])
         derl2.append(der_2[list(dop_1.keys())[vals.index(min(vals))]][0])
-        ampl.append(amp[list(amp.keys())[vals.index(min(vals))]][0])
+        ampl.append(amp[list(dop_1.keys())[vals.index(min(vals))]][0])
         der_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         der_2[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         amp[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
         dop_1[list(dop_1.keys())[vals.index(min(vals))]].pop(0)
-        key = list(dop_1.keys())[vals.index(min(vals))]
         sum_peak.append(intens[i])
         sum_peak.pop(0)
         sum_conf.append(conf[i])
         sum_conf.pop(0)
-        mean_i = 0
-        mean_c = 0
-        for k in range(0,5):
-            mean_i = mean_i + sum_peak[k]
-            mean_c = mean_c + sum_conf[k]
-        keys.append(key)
+        sum_amp.append(ampl[i])
+        mean_i_1 = 0
+        mean_c_1 = 0
+        mean_amp_1 = 0
+        mean_i_2 = 0
+        mean_c_2 = 0
+        mean_amp_2 = 0
+        for k in range(0,10):
+            mean_amp_2 = mean_amp_2 + sum_amp[k]
+            mean_c_2 = mean_c_2 + sum_conf[k]
+            mean_i_2 = mean_i_2 + sum_peak[k]
+            if k % 2 == 0:
+                mean_i_1 = mean_i_1 + sum_peak[- int((k + 2)/2)]
+                mean_c_1 = mean_c_1 + sum_conf[- int((k + 2)/2)]
+                mean_amp_1 = mean_amp_1 + sum_amp[- int((k + 2)/2)]
         if seq_gd == 'CTAG':
-            joined.append([conf[i], intens[i], mean_i/5, mean_c/5, ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], length - min(vals)]) ## Here the value for the position in the reverse must be flipped
+            joined.append([conf[i], intens[i], ampl[i], mean_i_2/10, mean_amp_2/10, mean_c_2/10, mean_i_1/5, mean_c_1/5, mean_amp_1/5, peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], (length - min(vals))/length, length - min(vals)]) ## Here the value for the position in the reverse must be flipped
         elif seq_gd == 'GATC':
-            joined.append([conf[i], intens[i], mean_i/5, mean_c/5, ampl[i], peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)])
-    return joined, keys
+            joined.append([conf[i], intens[i], ampl[i], mean_i_2/10, mean_amp_2/10, mean_c_2/10, mean_i_1/5, mean_c_1/5, mean_amp_1/5, peakdis_1[i], peakdis_2[i], derl1[i], derl2[i], min(vals)/length, min(vals)])
+    return joined
     
     
 def tmp_rm():

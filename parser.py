@@ -144,7 +144,7 @@ def main(path_fw, path_rv):
 ##### Perchance doing the absolute value of the subtraction between the PLOCs and the total length 14000
 
 
-path_folder = "c:\\Users\\Pedro\Downloads\\secuenciasvp7_sp101bsp105sp106sp109sp111sp113sp116"
+path_folder = "c:\\Users\\Pedro\\Downloads\\secuenciasvp4primeralternativos"
 file_list = [j for j in os.listdir(path_folder) if ".ab1" in j]
 files = [file.split("_")[2] for file in file_list]
 file_purge = dict(enumerate(files))
