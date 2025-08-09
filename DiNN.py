@@ -15,9 +15,13 @@ import os
 import keras
 import subprocess
 import numpy as np
+import re
 from Functions import filterer, peak_discovery, rename
 
-cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "5.0", "--ep", "2.0", "--lexp", "0.00", "--lop", "0.00", "-"]
+cmd = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "0.8", "--ep", "2.5", "--lexp", "0.00", "--lop", "0.00", "-"]
+cmd_alt = [r"C:\Mafft\mafft.bat", "--clustalout", "--localpair", "--maxiterate", "1000", "--op", "1.53", "--ep", "0.123", "--lexp", "0.00", "--lop", "0.00", "-"]
+
+### ADD A CONDITION TO REPEAT UNDER DIFFERENT PARAMETERS IF THE ALIGNMENT LOOKS LIKE SHIT FOR INSTANCE LESS THAN 20 ASTERISKS TOGETHER
 
 all_files = os.listdir()
 
@@ -32,7 +36,6 @@ for i in all_files:
     if i.startswith("Sp"):
         data_file = open(i, "r")
         new_file.write(str(i.split(".txt")[0]))
-        new_file.write("\n\n")
         file_read = data_file.read()
         every = list(filter(('').__ne__, file_read.split('\n')))
         channels_fw, channels_rv, guide_fw, guide_rv = ast.literal_eval(every[10]), ast.literal_eval(every[12]), every[14], every[16]
@@ -80,11 +83,23 @@ for i in all_files:
                 sequence_1 = sequence
             else:
                 sequence_2 = sequence
-        align = f">\n{sequence_1}\n>\n{sequence_2}"
-        process = subprocess.run(cmd,input=align,capture_output=True,text=True,shell=True)
-        align = process.stdout
-        new_file.write(str(align))
-        new_file.write("\n\n\n")
+                align = f">\n{sequence_1}\n>\n{sequence_2}"
+                process = subprocess.run(cmd,input=align,capture_output=True,text=True,shell=True)
+                alignment = str(process.stdout)
+                if "*"*30 in alignment:
+                    new_file.write("GOOD READ \n\n")
+                    new_file.write(align)
+                    new_file.write("\n")
+                    new_file.write(alignment)
+                    new_file.write("\n\n\n")
+                else:
+                    new_file.write("POOR READ \n\n")
+                    process = subprocess.run(cmd_alt,input=align,capture_output=True,text=True,shell=True)
+                    alignment = str(process.stdout)
+                    new_file.write(align)
+                    new_file.write("\n")
+                    new_file.write(alignment)
+                    new_file.write("\n\n\n")
         data_file.close()
 
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
