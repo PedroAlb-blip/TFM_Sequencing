@@ -1,8 +1,8 @@
 from Functions import rename, peak_discovery, filterer
 import ast
 import numpy as np
-file_names = ["Sp101b-VP7.txt", "Sp105-VP7.txt", "Sp106-VP7.txt", "Sp109-VP7a.txt", "Sp111-VP7a.txt", "Sp113-VP7a.txt", "Sp116-VP7a.txt"]
-file_app = open("training_params.txt", "a")
+file_names = ["TRAINING\\Sp101b-VP7.txt", "TRAINING\\Sp105-VP7.txt", "TRAINING\\Sp106-VP7.txt", "TRAINING\\Sp109-VP7a.txt", "TRAINING\\Sp111-VP7a.txt", "TRAINING\\Sp113-VP7a.txt", "TRAINING\\Sp116-VP7a.txt"]
+file_app = open("TRAINING\\training_params.txt", "a")
 for i in file_names:
     data = open(i, "r")
     read = data.read()
@@ -21,8 +21,8 @@ for i in file_names:
 file_app.close()
 
 
-file_res = open("results.txt", "r")
-file_par = open("training_params.txt", "r")
+file_res = open("TRAINING\\results.txt", "r")
+file_par = open("TRAINING\\training_params.txt", "r")
 lines_res = file_res.read()
 lines_par = file_par.read()
 results = list(filter(('').__ne__, lines_res.split('\n')))

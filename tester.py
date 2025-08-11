@@ -68,7 +68,7 @@ ylno = list(only)
 ylno.reverse()
 ylno = ''.join(ylno)
 indices = (only.find("*"), len(ylno) - ylno.find("*"))
-corrections = [ (i.start(), i.end()) for i in list(re.finditer(r'\*_+\*', only))]
+corrections = [ (i.start(), i.end()) for i in list(re.finditer('\*_+\*', only))]
 color=["red", "green", "yellow", "blue"]
 for i in corrections:
     fw = seq_fw_al[i[0] - 3 :i[1] + 3].replace("-","").upper() ## fw is the mismatched sequence for the forward sequence in a specific region of incongruence

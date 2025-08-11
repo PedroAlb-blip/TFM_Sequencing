@@ -5,8 +5,8 @@ import ast
 import numpy as np
 import keras
 
-file_res = open("results.txt", "r")
-file_par = open("training_params.txt", "r")
+file_res = open("TRAINING\\results.txt", "r")
+file_par = open("TRAINING\\training_params.txt", "r")
 lines_res = file_res.read()
 lines_par = file_par.read()
 results = list(filter(('').__ne__, lines_res.split('\n')))
