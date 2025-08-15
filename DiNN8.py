@@ -30,10 +30,13 @@ all_files = os.listdir("c:\\Users\\Pedro\\DCYFR\\Sequences")
 
 model = keras.models.load_model("c:\\Users\\Pedro\\DCYFR\\weights_checkpoint.keras")
 
-new_file = open("attempt.txt", "a")
+new_file = open("alignments.txt", "a")
+other_new_file = open("consensi.txt", "a")
+
 for i in all_files:
     data_file = open(f"Sequences\\{i}", "r")
     new_file.write(str(i.split(".txt")[0]))
+    other_new_file.write(str(i.split(".txt")[0]))
     file_read = data_file.read()
     every = list(filter(('').__ne__, file_read.split('\n')))
     channels_fw, channels_rv, guide_fw, guide_rv = ast.literal_eval(every[10]), ast.literal_eval(every[12]), every[14], every[16]
@@ -86,7 +89,7 @@ for i in all_files:
             choice = [aln.count("*****") for aln in alignments]
             align_split = alignments[choice.index(max(choice))].split('\n')
             align_purged = [u for u in align_split if len(u) > 1]
-            new_file.write(f" NUMBER OF READ: {len(alignments)}; COVERAGE {int(cover*(len(choice) - choice.index(max(choice)))*125)}% \n\n")
+            new_file.write(f" NUMBER OF READ: {len(alignments)}; COVERAGE {int(cover*(1.25**(len(choice) - choice.index(max(choice))))*100)}% \n\n")
             asterisk, seq_fw_al, seq_rv_al = "", "", ""
             for chunk in range(0,len(align_purged)):
                 if chunk % 3 == 0 and chunk != 0:
@@ -95,8 +98,8 @@ for i in all_files:
                     seq_fw_al = seq_fw_al + align_purged[chunk][16:]
                 elif chunk % 3 == 2:
                     seq_rv_al = seq_rv_al + align_purged[chunk][16:]
-            seq_fw_al_ad = sequence_1[0:int(round((((len(sequence_1)-1)-(len(sequence_1)-1)*cover*(len(choice) - choice.index(max(choice)))*1.25)*offset_fw),0))]
-            seq_rv_al_ad = sequence_2[int(round(((len(sequence_2)-1)*(len(choice) - choice.index(max(choice)))*cover*1.25)*offset_rv, 0)): -1]
+            seq_fw_al_ad = sequence_1[0:int(round((((len(sequence_1)-1)-(len(sequence_1)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*offset_fw),0))]
+            seq_rv_al_ad = sequence_2[int(round(((len(sequence_2)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*offset_rv, 0)): -1]
             asterisk_1 = "-"*len(seq_fw_al_ad)
             asterisk_2 = "-"*len(seq_rv_al_ad)
             larger = [len(splitted) for splitted in asterisk.split(" ")]
@@ -123,9 +126,9 @@ for i in all_files:
                 new_file.write("\n\n")
             pos_1, pos_2 = sequence_1.find(seq_fw_al[asterisk.find("*"*max(larger)):].replace("-","").upper()), sequence_2.find(seq_rv_al[asterisk.find("*"*max(larger)):].replace("-","").upper())
             dict_1, dict_2 = {key:[] for key in channels_1.keys()}, {key:[] for key in channels_2.keys()}
-            for app in range(pos_1, pos_1+len(seq_fw_al[asterisk.find("*"*max(larger)):len(sequence_1)-1])):
+            for app in range(pos_1, pos_1 + max(larger)):
                 dict_1[sequence_1[app]].append(ploc_1[app])
-            for app in range(pos_2, pos_2+len(seq_rv_al[asterisk.find("*"*max(larger)):len(sequence_2)-1])):
+            for app in range(pos_2, pos_2 + max(larger)):
                 dict_2[sequence_2[app]].append(ploc_2[app])
             conf_1, conf_2 = confidence(dict_1, channels_1), confidence(dict_2, channels_2)
             breaker = 0
@@ -144,8 +147,13 @@ for i in all_files:
             consensus = sequence_1[:pos_1] + sequence_2[pos_2:]
             new_file.write(">> DINN8ing consensus \n")
             new_file.write(consensus)
+            other_new_file.write("\n\n>> DINN8ing consensus \n")
+            other_new_file.write(consensus)
             new_file.write("\n\n\n")
+            other_new_file.write("\n\n\n")
     data_file.close()
+new_file.close()
+other_new_file.close()
 
 print(time.time() - start_time)
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
