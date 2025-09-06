@@ -1,0 +1,198 @@
+>Sp3_G4_def 90.79% >Sp3_P7_def_partial 88.65%
+
+>It22_G5_D8_complete 85.85% >It22_P13_D8_partial 94.84%
+
+>Sp76_G9_def_partial 89.22% >Sp76_P23_D8_partial 85.43%
+
+>Sp5_G9_def 89.70% >Sp5_P7_def_partial 87.69%
+
+>Sp7_G4_def 88.59% >Sp7_P6_def_partial 91.97%
+
+>Sp10_G9_def 92.25% >Sp10_P7_D8_partial 89.91%
+
+>Sp11_G4_def 89.59% >Sp11_P6_def_partial 88.13%	
+
+>Sp12_G9_def 89.49% >Sp12_P7_def_partial 87.46% 
+
+>Sp15a_G9_def 89.81% >Sp15a_P7_def_partial 87.69%
+
+>Sp17_G4_def_partial 92.84% >Sp17_P6_def_partial 91.13%
+
+>Sp35_G4_def 91.63% >Sp35_P19_def_partial 94.02%
+
+>Sp20_G9_def_partial 98.52% >Sp20_P23_D8_partial 84.50%
+
+>It14_G1_D8_partial 94.40% >It14_P13_D8_partial 92.60%
+
+>It19_G1_def 97.04% >It19_P32_D8_partial 89.69%	
+
+>Sp22_G3_def 92.25% >Sp22_P7_D8_partial 96.12%
+
+>Sp24_G5_def 86.65% >Sp24_P7_D8_partial 92.08%
+
+>Sp27_G3_def_partial 91.04% >Sp27_P13_D8_partial 95.96%	
+
+>Sp29_G3_def_partial 91.25% >Sp29_PX_0 0%
+
+>It03_G9_D8_complete 88.12% >It03_P13_D8_partial 94.58%
+
+>Sp8_G4_def 89.83% >Sp8_P6_def_partial 85.82%	
+
+>Sp36_G3_def_partial 87.49% >Sp36_P7_def_partial 87.52%
+
+>Sp42_G9_def 89.50% >Sp42_PX_0 0%
+
+>Sp42a_G4_def 89.59% >Sp42a_P7_D8_partial 92.40%	
+
+>Sp111_G4_D8_complete 90.70% >Sp111_P23_D8_partial 84.30%
+
+>Sp44_G4_def_partial 91.47% >Sp44_P6_def_partial 90.89%
+
+>Sp45_G9_def 98.98% >Sp45_P23_D8_complete 87.33%
+
+>Sp46_G5_def 85.57% >Sp46a_P23_D8_complete 80%
+
+>Sp47_G3_def 92.05% >Sp47_P23_D8_complete 87.00%
+
+>Sp78_G3_def 91.34% >Sp78_P7_D8_partial 85.57%	
+
+>Sp50_G9_def_partial 86.83% >Sp50_P6_def_partial 85.85%
+
+>Sp53_G3_def 91.13% >Sp53_PX_0 0%
+
+>Sp58_G9_def 89.70% >Sp58_P7_D8_partial 93.55%
+
+>Sp60_G9_def 89.36% >Sp60_P23_D8_partial 89.02%	
+
+>Sp62_G9_def_partial 86.75% >Sp62_P13_D8_partial 95.27%
+
+>Sp63_G5_def 85.83% >Sp63_P23_def 89.22% 
+
+>Sp113_G9_D8_complete 90.57% >Sp113_P7_D8_partial 94.66%
+
+>Sp63_G5_def 85.83% >Sp63_P23_D8_partial 88.74% 
+
+>Sp64_G9_def 89.60% >Sp64_P7_D8_partial 85.56%
+
+>Sp65_G9_def 92.67% >Sp65_P7_D8_partial 90.58%
+
+>Sp70_G4_def_partial 83.63% >Sp70_P6_def_partial 90.05%
+
+>It01_G1_rev 96.18% >It01_P7_D8_partial 85.71%
+
+>Sp71_G5_def 84.88% >Sp71_P6_def_partial 86.14%
+
+>Sp72_G9_def_partial 88.44% >Sp72_P13_def 95.87%
+
+>Sp73_G9_D8_complete 97.57% >Sp73_P23_D8_complete 85.71% 
+
+>Sp74_G9_def 98.17% >Sp74_P23_D8_complete 84.81%
+
+>Sp76_G9_def_partial 89.22% >Sp76_P23_def 87.87%
+
+>Sp78_G3_def 91.34% >Sp78_P7_def 88.16%
+
+>It24_G5_D8_complete 87.55% >It24_P13_D8_partial 95.80% 
+
+>Sp80_G9_def 91.75% >Sp80_P13_def_partial 80.10%
+
+>Sp82_G4_def 92.22% >Sp82_P6_def_partial 91.72%
+
+>Sp83_G9_def 89.64% >Sp83_P23_def 88.10%	
+
+>Sp85_G4_def 91.75% >Sp85_P7_D8_partial 88.79%
+
+>Sp86_G9_def 89.54% >Sp86_PX_0 0%
+
+>Sp90_G5_def 85.48% >Sp90_P6_def_partial 95.92%
+
+>Sp97_G3_D8_partial 90.62% >Sp97_P13_def 95.04%
+
+>It13_G1_D8_partial 95.46% >It13_P7_D8_partial 85.82%
+
+>Sp97_G3_D8_partial 90.62% >Sp97_P13_D8_partial 94.84%
+
+>Sp101b_G5_def 87.63% >Sp101b_P23_D8_partial 88.44%
+
+>It21_G4_D8_complete 90.99% >It21_P23_D8_complete 87.32%
+
+>Sp106_G3_def 91.44% >Sp106_P7_D8_complete 89.43%	
+
+>Sp62_G9_def_partial 86.75% >Sp62_P13_def 96.30%
+
+>Sp105_G4_def 85.29% >Sp105_P7_D8_partial 90.51% 
+
+>It06_G3_D8_complete 92.45% >It06_P13_D8_complete 88.21%
+
+>Sp101b_G5_D8_complete 86.92% >Sp101b_P23_D8_partial 88.44%
+
+>Sp106_G3_D8_partial 90.28% >Sp106_P7_D8_complete 89.43%	
+
+>Sp109_G9_def_partial 88.05% >Sp109_PX_0 0% 
+
+>Sp109_G9_D8_complete 87.62% >Sp109_PX_0 0% 
+
+>Sp111_G4_def_partial 92.29% >Sp111_P23_def 85.16% 
+
+>Sp72_G9_def_partial 88.44% >Sp72_P13_D8_partial 94.47%
+
+>It19_G1_D8_partial 97.17% >It19_P32_D8_partial 89.69%	
+
+>Sp113_G9_def_partial 92.03% >Sp113_P7_def 97.88% 
+
+>Sp116_G9_D8_complete 97.61% >Sp116_P23_D8_complete 80%
+
+>Sp117.1_G9_D8_complete 89.22% >Sp117.1_P23_D8_complete 88.67%	
+
+>It01_G1_D8_partial 95.83% >It01_P7_D8_partial 85.71%
+
+>Sp105_G4_D8_partial 84.97% >Sp105_P7_D8_partial 90.51% 
+
+>It02_G9_def_complete 87.85% >It02_P23_D8_partial 94.70%
+
+>It03_G9_def 89.30% >It03_P13_D8_partial 94.58%
+
+>Sp14_G9_def 89.81% >Sp14_P7_def_partial 87.59%
+
+>It06_G3_def 93.32% >It06_P13_D8_complete 88.21%
+
+>It08_G3_D8_partial 84.98% >It08_P13_D8_complete 94.84% 
+
+>It13_G1_def 96.41% >It13_P7_D8_partial 85.82%
+
+>It14_G1_rev 96.07% >It14_P13_D8_partial 92.60%
+
+>It20_G9_def 87.95% >It20_P23_D8_partial 95.69%	
+
+>It21_G4_def 92.36% >It21_P23_D8_complete 87.32%
+
+>Sp83_G9_def 89.64% >Sp83_P23_D8_partial 86.51%	
+
+>It22_G5_def 87.66% >It22_P13_D8_partial 94.84%
+
+>It24_G5_rev 86.53% >It24_P13_D8_partial 95.80% 
+
+>Pl03_G5_D8_complete 85.80% >Pl03_P13_D8_partial 94.52% 
+
+>Pl07_G5_D8_complete 82.17% >Pl07_P23_D8_partial 87.45% 
+
+>Pl08_G4_D8_partial 91.71% >Pl08_P23_D8_partial 87.71% 
+
+>Pl09_G1_D8_partial 93.46%>Pl09_P7_D8_partial 84.83%
+
+>Pl10_G1_D8_partial 97.11% >Pl10_P7_D8_partial 83.20%
+
+>Pl11_G5_D8_partial 84.80% >Pl11_P13_D8_complete 84.12%	
+
+>Pl19_G5_D8_complete 90.78% >Pl19_P13_D8_complete 79.78%	
+
+>Pl21_GX_0 0% >Pl21_P13_D8_partial 83.56%
+
+>It20_G9_D8_complete 87.82% >It20_P23_D8_partial 95.69%	
+
+>Sp117.2_G9_D8_complete 89.00% >Sp117.2_P23_D8_complete 86.96%
+
+
+
+
+

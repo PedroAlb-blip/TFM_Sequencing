@@ -1,5 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense, Activation
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import ast
 import numpy as np
@@ -22,6 +23,7 @@ for i in range(0, len(results)):
             ones = ones + [1]*(len(train)-len(ones))
 print(len(ones), len(train))     
 trainX = np.array(train)
+trainX_scaled = StandardScaler().fit_transform(trainX)
 trainY = np.array(ones)
 
 
@@ -33,11 +35,11 @@ trainY = np.array(ones)
 # bias_3 = np.array(ast.literal_eval(arr.split('array(')[6].split('dtype=')[0].replace("],\n", "]").replace("\n", "")), dtype=np.float32)
 
 model = Sequential()
-model.add(Dense(32, input_dim=15)) 
+model.add(Dense(32, input_dim=len(train[0]), kernel_initializer=keras.initializers.HeNormal())) 
 model.add(Activation('relu'))
-model.add(Dense(16)) 
+model.add(Dense(16, kernel_initializer=keras.initializers.HeNormal()))
 model.add(Activation('relu'))
-model.add(Dense(1))
+model.add(Dense(1, kernel_initializer=keras.initializers.HeNormal()))
 model.add(Activation('sigmoid'))
 
 
@@ -47,9 +49,9 @@ model.add(Activation('sigmoid'))
 #     j = j + 1
 
 checkpoint_path = "c:\\Users\\Pedro\\DCYFR\\weights_checkpoint.keras"
-checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_freq="epoch", monitor='accuracy', mode='max', save_best_only=True)
-model.compile(loss=keras.losses.BinaryFocalCrossentropy(gamma=2.0, alpha=0.25), optimizer=keras.optimizers.Adamax(learning_rate=0.001), metrics=['accuracy']) #
-history = model.fit(trainX, trainY, epochs=100, batch_size=80, verbose=1, validation_split=0.25, callbacks=[checkpoint])
+checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_freq="epoch", monitor='val_accuracy', mode='max', save_best_only=True)
+model.compile(loss=keras.losses.BinaryCrossentropy(), optimizer=keras.optimizers.Adamax(learning_rate=0.001, clipnorm=0.5), metrics=['accuracy']) #
+history = model.fit(trainX_scaled, trainY, epochs=30, batch_size=125, verbose=1, validation_split=0.25, callbacks=[checkpoint])
 
 keras.models.load_model(checkpoint_path)
 

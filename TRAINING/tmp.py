@@ -9,6 +9,8 @@ for i in file_names:
     all = list(filter(('').__ne__, read.split('\n')))
     channels_fw = ast.literal_eval(all[10])
     channels_rv = ast.literal_eval(all[12])
+    for key in channels_rv.keys():
+        channels_rv[key] = channels_rv[key][::-1]
     guide_fw = all[14]
     guide_rv = all[16]
     channels_fw = rename(channels_fw, guide_fw)
@@ -31,16 +33,16 @@ ones = []
 train = []
 for i in range(0, len(results)):
     print("\t", i)
-    if results.index(results[i]) % 3 == 1:
+    if results.index(results[i]) % 3 == 0:
         res = list(ast.literal_eval(results[i]))
         par_lst = list(ast.literal_eval(params[int(round(i/3, 0))]))
         for j in res:
-            ok = ""
-            while j != par_lst[res.index(j)][-1] and ok != "ok":
+            ok = "a"
+            while j != par_lst[res.index(j)][-1] and ok != "":
                 print(j, par_lst[res.index(j) - 1][-1], par_lst[res.index(j) + 1][-1])
                 print(res.index(j))
                 ok = input()
-    elif results.index(results[i]) % 3 == 0:
+    elif results.index(results[i]) % 3 == 2:
         ones = ones + list(ast.literal_eval(results[i]))
         train = train + list(ast.literal_eval(params[int(round(i/3,0)) - 1]))
         if len(ones) < len(train):

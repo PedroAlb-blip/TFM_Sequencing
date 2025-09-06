@@ -4,37 +4,35 @@ from Bio import SeqIO
 import copy
 
 #### PERHAPS A CONFIDENCE METRIC CAN BE CALCULATED AS THE VALUE OF EACH CHANNEL DIVIDED BY THE TOTAL AND CHOOSE ONWARDS FROM A THRESHOLD OF HIGH REPETITIONS
-def confidence(dop, dol): 
-    conl = {key : [] for key in list(dop.keys())}
+def confidence(dop, dol): ### DOP is a dictionary of peaks that is the peaks in their respective channels, DOL is a dictionary of lists that is the whole channel lists
+    conl = {key : [] for key in list(dop.keys())} 
     intens = {key : [] for key in list(dop.keys())}
-    conf = []
-    ints = []
-    peaks = []
-    peak_dist_fw = []
-    peak_dist_bw = []
+    conf, ints, peaks, peak_dist_fw, peak_dist_bw = [], [], [], [], []
     for keys in list(dop.keys()):
         for i in dop[keys]:
-            peaks.append(i)
-            sums = sum([dol[c][i] for c in dol.keys()])
-            intens[keys].append(dol[keys][i])
+            peaks.append(i) ### appended with the peak position
+            sums = sum([dol[c][i] for c in dol.keys()]) ### appended with the sum of intensities at peak position
+            intens[keys].append(dol[keys][i]) ### appended with all intensities at peak position
             try:
-                conme = dol[keys][i]/sums
+                conme = dol[keys][i]/sums ### confidence is calculated as the intensity of each channel over the whole
             except ZeroDivisionError:
                 conme = 0
             conl[keys].append(conme)
     peaks.sort()
     for i in range(0, len(peaks)):
+        ### Here peak distance is calculated to the next and previous peaks
         try:
             peak_dist_fw.append(peaks[i + 1] - peaks [i])
         except IndexError:
             peak_dist_fw.append(-1)
         try:
-            peak_dist_bw.append(peaks [i] - peaks[i - 1]) #### Value at [-1] exists
+            peak_dist_bw.append(peaks [i] - peaks[i - 1]) 
         except i == 0:
             peak_dist_bw.append(-1)
+        ### Here another neat trick is used, to avoid possible .index() mistakes the values are eliminated from the lists as they are transcribed to the finalised lists
         try:
             vals = [dop[key][0] for key in list(dop.keys())]
-        except IndexError:
+        except IndexError: ### As we are eliminating values within lists a point will come of error at dop[key][0] as it does not exist
             leng = [len(dop[key]) for key in list(dop.keys())]
             key = list(dop.keys())[leng.index(min(leng))]
             dop.pop(key, None)
@@ -49,6 +47,7 @@ def confidence(dop, dol):
     return conf, ints, peak_dist_fw, peak_dist_bw
 
 def rename(dol, guide):
+    ### Easy function here, it renames the channels (DOL) to the corresponding nucleotides as stated in the guides
     tmp_lst = list(dol.keys())
     for i in range(0, len(dol.keys())):
         dol[guide[i]] = dol.pop(str(tmp_lst[i]))
@@ -60,9 +59,12 @@ def peak_discovery(dol):
     peaks_key = {key : [0] for key in keys}
     lop = []
     for key in keys:
+        addendum =[50]*10
         for i in range(2, len(dol[key])):
-            if i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i - 1] > 50: #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3) and dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i - 1] > 0.25*sum(addendum)/10: #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1)
+                addendum.append(dol[key][i-1])
+                addendum.pop(0)
         lop = lop + peaks_key[key]
     lop.sort()
     current = int(lop[0])
@@ -99,7 +101,7 @@ def peak_discovery(dol):
     vals = []
     for value in peaks_key.values():
         vals = vals + value 
-    return peaks_key, lop, seq #### This returns the peaks as a dictionary and as a list
+    return peaks_key, lop, seq #### This returns the peaks as a dictionary and as a list and the sequence of all peaks
 
 def width(dol, dop): #### MUST BE CHANGED AS WELL
     amplitude = {key : [] for key in list(dop.keys())}
@@ -137,13 +139,8 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
             der_1[key].append(dol[key][i] - dol[key][i - 1])
             der_2[key].append(dol[key][i + 1] - dol[key][i])
             fullist = fullist + 1
-    joined = []
-    derl1 = []
-    derl2 = []
-    ampl = []
-    sum_peak = [0]*10
-    sum_conf = [0]*10
-    sum_amp = [0]*10
+    joined, derl1, derl2, ampl = [], [], [], []
+    sum_peak, sum_conf, sum_amp = [0]*10, [0]*10, [0]*10
     for i in range(0, fullist):
         try:
             vals = [dop_1[key][0] for key in list(dop_1.keys())]
@@ -170,12 +167,7 @@ def filterer(dol, dop):  #Here dol refers to dictionary of lists aka channels, a
         sum_conf.pop(0)
         sum_amp.append(ampl[i])
         sum_amp.pop(0)
-        mean_i_1 = 0
-        mean_c_1 = 0
-        mean_amp_1 = 0
-        mean_i_2 = 0
-        mean_c_2 = 0
-        mean_amp_2 = 0
+        mean_i_1, mean_c_1, mean_amp_1, mean_i_2, mean_c_2, mean_amp_2 = 0, 0, 0, 0, 0, 0
         for k in range(0,10):
             mean_amp_2 = mean_amp_2 + sum_amp[k]
             mean_c_2 = mean_c_2 + sum_conf[k]
