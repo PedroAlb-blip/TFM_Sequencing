@@ -1,7 +1,7 @@
 #### The idea behind this file is to produce a list of results and values regarding the presence or absence of peaks.
 import matplotlib.pyplot as plt
 import ast
-from Functions import filterer, peak_discovery, rename
+from Functions import  peak_discovery, rename
 
 file = open("TRAINING\\Sp116-VP7a.txt", "r")
 data = file.read()

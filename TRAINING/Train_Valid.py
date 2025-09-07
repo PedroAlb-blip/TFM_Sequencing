@@ -1,6 +1,5 @@
 from keras.models import Sequential
 from keras.layers import Dense, Activation
-from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import ast
 import numpy as np
@@ -16,16 +15,14 @@ ones = []
 train = []
 k = 0
 for i in range(0, len(results)):
-    if results.index(results[i]) % 3 == 0:
+    if results.index(results[i]) % 3 == 2:
         ones = ones + list(ast.literal_eval(results[i]))
         train = train + list(ast.literal_eval(params[int(i/3)]))
         if len(ones) < len(train):
             ones = ones + [1]*(len(train)-len(ones))
 print(len(ones), len(train))     
 trainX = np.array(train)
-trainX_scaled = StandardScaler().fit_transform(trainX)
 trainY = np.array(ones)
-
 
 # weight_1 = np.array(ast.literal_eval(arr.split('array(')[1].split('dtype=')[0].replace("],\n", "]").replace("\n", "")), dtype=np.float32)
 # bias_1 = np.array(ast.literal_eval(arr.split('array(')[2].split('dtype=')[0].replace("],\n", "]").replace("\n", "")), dtype=np.float32)
@@ -49,11 +46,12 @@ model.add(Activation('sigmoid'))
 #     j = j + 1
 
 checkpoint_path = "c:\\Users\\Pedro\\DCYFR\\weights_checkpoint.keras"
-checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_freq="epoch", monitor='val_accuracy', mode='max', save_best_only=True)
-model.compile(loss=keras.losses.BinaryCrossentropy(), optimizer=keras.optimizers.Adamax(learning_rate=0.001, clipnorm=0.5), metrics=['accuracy']) #
-history = model.fit(trainX_scaled, trainY, epochs=30, batch_size=125, verbose=1, validation_split=0.25, callbacks=[checkpoint])
+checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_freq="epoch", monitor='accuracy', mode='max', save_best_only=True)
+model.compile(loss=keras.losses.BinaryFocalCrossentropy(gamma=2.0, alpha=0.25), optimizer=keras.optimizers.Adamax(learning_rate=0.001), metrics=['accuracy']) #
+history = model.fit(trainX, trainY, epochs=100, batch_size=125, verbose=1, validation_split=0.25, callbacks=[checkpoint])
 
 keras.models.load_model(checkpoint_path)
+
 
 weighty_file = open("weights_3.txt", "w")
 weighty_file.write(str(model.get_weights()))

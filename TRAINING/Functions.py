@@ -62,7 +62,7 @@ def peak_discovery(dol):
     for key in keys:
         addendum =[50]*10
         for i in range(2, len(dol[key])):
-            if dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i - 1] > 0.25*sum(addendum)/10 and i not in range(peaks_key[key][-1] - 3, peaks_key[key][-1] + 3): #### Wherever the derivatives switch signs there must be a local peak (min or max)
+            if dol[key][i-1] - dol[key][i-2] >= 0 and dol[key][i] - dol[key][i-1] <= 0 and dol[key][i - 1] > 0.25*sum(addendum)/10 and i not in list(range(peaks_key[key][-1], peaks_key[key][-1] + 7)): #### Wherever the derivatives switch signs there must be a local peak (min or max)
                 peaks_key[key].append(i-1) ### If there is a change in derivative sign and the intensity is higher than some threshold
                 addendum.append(dol[key][i-1])
                 addendum.pop(0)

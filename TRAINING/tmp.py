@@ -1,6 +1,6 @@
 from Functions import rename, peak_discovery, filterer
 import ast
-import numpy as np
+
 file_names = ["TRAINING\\Sp101b-VP7.txt", "TRAINING\\Sp105-VP7.txt", "TRAINING\\Sp106-VP7.txt", "TRAINING\\Sp109-VP7a.txt", "TRAINING\\Sp111-VP7a.txt", "TRAINING\\Sp113-VP7a.txt", "TRAINING\\Sp116-VP7a.txt"]
 file_app = open("TRAINING\\training_params.txt", "a")
 for i in file_names:
