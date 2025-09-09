@@ -138,13 +138,24 @@ for i in all_files: #Iterating over all files in the sequences folder
             for index in indices:
                 channels_proxy_fw, channels_proxy_rv = {key:[] for key in channels_fw.keys()}, {key:[] for key in channels_fw.keys()}
                 fw_index_1 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper())]
-                fw_index_2 = fw_index_1 + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")
+                fw_index_2 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")]
                 rv_index_1 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper())]
-                rv_index_2 = rv_index_1 + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")
+                rv_index_2 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")]
                 for key in channels_fw.keys():
-                    if fw_index_2 - fw_index_1 > rv_index_2 - rv_index_1:
+                    channels_proxy_fw[key] = channels_fw[key][fw_index_1:fw_index_2]
+                    channels_proxy_rv[key] = channels_rv[key][rv_index_1:rv_index_2]
+                fw_values = list(channels_proxy_fw.values())
+                rv_values = list(channels_proxy_rv.values())
+                channels_fw_sum = [x + y + z + t for x, y, z, t in zip(fw_values[0], fw_values[1], fw_values[2], fw_values[3])]
+                channels_rv_sum = [x + y + z + t for x, y, z, t in zip(rv_values[0], rv_values[1], rv_values[2], rv_values[3])]
+                print(channels_rv_sum, channels_fw_sum)
+                if fw_index_2 - fw_index_1 > rv_index_2 - rv_index_1:
+                    length = index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")
+                    for roll in range(1, length):
                         #channels_proxy_fw[key] = channels_fw[key][fw_index_1:fw_index_2]
-                        channels_proxy_rv[key] = channels_rv[key][rv_index_1:rv_index_1+(rv_index_2 - rv_index_1)/(index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-"))]
+                        while len(channels_proxy_fw) > len(channels_proxy_rv):
+                            channels_proxy_fw[key] = channels_fw[key][int(round(rv_index_1+(roll - 1)*(rv_index_2 - rv_index_1)/length)):int(round(rv_index_1+roll*(rv_index_2 - rv_index_1)/length))]
+
                 
             break
             pos_1, pos_2 = sequence_1.find(seq_fw_al[asterisk.find("*"*max(larger)):].replace("-","").upper()), sequence_2.find(seq_rv_al[asterisk.find("*"*max(larger)):].replace("-","").upper())
