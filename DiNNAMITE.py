@@ -42,150 +42,194 @@ for i in all_files: #Iterating over all files in the sequences folder
     channels_fw, channels_rv, guide_fw, guide_rv = ast.literal_eval(every[10]), ast.literal_eval(every[12]), every[14], every[16]
     channels_fw = rename(channels_fw, guide_fw)
     channels_rv = rename(channels_rv, guide_rv)
-    is_fw = np.array(filterer(channels_fw, peak_discovery(channels_fw)[0]))
-    is_rv = np.array(filterer(channels_rv, peak_discovery(channels_rv)[0]))
-    res_fw = np.ndarray.tolist(model.predict(is_fw)) ### Here the neural network is called to produce a binary vector 
-    res_rv = np.ndarray.tolist(model.predict(is_rv))
-    seq_fw = peak_discovery(channels_fw)[2]
-    seq_rv = peak_discovery(channels_rv)[2]
-    pred_fw = [str(int(round(v[0], 0))) for v in res_fw[:]] ### Here the values are rounded to either 1 or 0 by mathematical rounding
-    pred_rv = [str(int(round(v[0], 0))) for v in res_rv[:]]
-    sequence_1, sequence_2 = "", ""
-    for pred, seq, channels in zip((pred_fw, pred_rv), (seq_fw, seq_rv), (channels_fw, channels_rv)): ### The sequences are clipped eliminitaing untruthful peaks i.e. 1s in the binary vector
-        # new_file.write(str(predic))
-        # new_file.write("\n\n")
-        sequence = ""
-        pred = [int(num) for num in pred]
-        ploc = peak_discovery(channels)[1] ### The full list is kept
-        true_ploc = []
-        for nt in range(0, len(pred)):
-            if pred[nt] == 0:
-                sequence = sequence + seq[nt] ### the sequence is generated
-                true_ploc.append(ploc[nt]) ### True peaks are added to a list
-        # new_file.write(str(sequence))
-        # new_file.write("\n\n")
-        if sequence_1 == "":
-            sequence_1 = sequence
-            channels_1 = channels
-            ploc_1 = true_ploc ### Sequence and channels are added to either 1 for forward or 2 for reverse
-        elif sequence_1 != "" and sequence_2 == "":
-            sequence_2 = sequence
-            channels_2 = channels
-            ploc_2 = true_ploc
-        if sequence_1 != "" and sequence_2 != "":
-            alignment = ""
-            alignments = []
-            cover = 1
-            offset_fw, offset_rv = 1, 1
-            if len(sequence_1) > len(sequence_2):
-                offset_fw = len(sequence_2)/len(sequence_1) 
-            else:
-                offset_rv = len(sequence_1)/len(sequence_2)
-            while "*"*25 not in alignment and cover > 0.1: ### 25 consecutive * serve as a marker for good alignment and the minimal coverage of secuence is set to 10%
-                align = f">\n{sequence_1[int(round(((len(sequence_1)-1)-(len(sequence_1)-1)*cover)*offset_fw, 0)) : -1]}\n>\n{sequence_2[0:int(round(((len(sequence_2)-1)*cover)*offset_rv, 0))]}"
-                process = subprocess.run(cmd,input=align,capture_output=True,text=True,shell=True)
-                alignment = str(process.stdout)
-                alignments.append(alignment)
-                cover = cover/1.25 ### As the tool finds no good alignment it reduces the amount of sequence covered
-            choice = [aln.count("*****") for aln in alignments] ### Of all sequences the one with the most accounts of 5 consecutive matches are taken to be the better ones
-            if max(choice) == 0: ### In case no good alignment is found then the last is chosen, with the least coverage
-                align_split = alignments[-1].split('\n')
-                max_choice = len(choice) - 1
-            else:
-                align_split = alignments[choice.index(max(choice))].split('\n')
-                max_choice = choice.index(max(choice))
-            align_purged = [u for u in align_split if len(u) > 1]
-            new_file.write(f" NUMBER OF READ: {len(alignments)}; COVERAGE {int(cover*(1.25**(len(choice) - max_choice))*100)}% \n\n")
-            asterisk, seq_fw_al, seq_rv_al = "", "", ""
-            for chunk in range(0,len(align_purged)): ### Alignment is chopped into 3 parts: forward, reverse and alignment and they are filled
-                if chunk % 3 == 0 and chunk != 0:
-                    asterisk = asterisk + align_purged[chunk][16:].replace("."," ")
-                elif chunk % 3 == 1:
-                    seq_fw_al = seq_fw_al + align_purged[chunk][16:]
-                elif chunk % 3 == 2:
-                    seq_rv_al = seq_rv_al + align_purged[chunk][16:]
-            ### Sequences are completed with the parts not present in the alignment
-            seq_fw_al_ad = sequence_1[0:int(round((((len(sequence_1)-1)-(len(sequence_1)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*offset_fw),0))]
-            seq_rv_al_ad = sequence_2[int(round(((len(sequence_2)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*offset_rv, 0)): -1]
-            asterisk_1 = "-"*len(seq_fw_al_ad)
-            asterisk_2 = "-"*len(seq_rv_al_ad)
-            larger = [len(splitted) for splitted in asterisk.split(" ")] ### List containing all asterisk regions
-            asterisk = asterisk_1 + asterisk + asterisk_2
-            seq_fw_al = seq_fw_al_ad + seq_fw_al + asterisk_2
-            seq_rv_al = asterisk_1 + seq_rv_al + seq_rv_al_ad
-            align = f">FORWARD\n{sequence_1}\n>REVERSE\n{sequence_2}\n\n"
-            new_file.write(align)
-            new_file.write("\n")
-            ### The full alignments are printed into the files
-            for line in range(0,len(asterisk),60):
-                if line + 60 > len(asterisk):
-                    new_file.write(seq_fw_al[line:])
+    correction = 0
+    while correction < 3:
+        sequence_1, sequence_2 = "", ""
+        lod, ploc_sub = [], []
+        for channels in (channels_fw, channels_rv): ### The sequences are clipped eliminitaing untruthful peaks i.e. 1s in the binary vector
+            is_seq = np.array(filterer(channels, peak_discovery(channels)[0]))
+            res_seq = np.ndarray.tolist(model.predict(is_seq)) ### Here the neural network is called to produce a binary vector
+            pred = [str(int(round(v[0], 0))) for v in res_seq[:]] ### Here the values are rounded to either 1 or 0 by mathematical rounding
+            # new_file.write(str(pred))
+            # new_file.write("\n\n")
+            seq = peak_discovery(channels)[2]
+            sequence = ""
+            pred = [int(num) for num in pred]
+            ploc = peak_discovery(channels)[1] ### The full list is kept
+            true_ploc = []
+            for nt in range(0, len(pred)):
+                if pred[nt] == 0:
+                    sequence = sequence + seq[nt] ### the sequence is generated
+                    true_ploc.append(ploc[nt]) ### True peaks are added to a list
+            # new_file.write(str(sequence))
+            # new_file.write("\n\n")
+            if sequence_1 == "":
+                sequence_1 = sequence
+                channels_1 = channels
+                ploc_1 = true_ploc ### Sequence and channels are added to either 1 for forward or 2 for reverse
+            elif sequence_1 != "" and sequence_2 == "":
+                sequence_2 = sequence
+                channels_2 = channels
+                ploc_2 = true_ploc
+            if sequence_1 != "" and sequence_2 != "":
+                alignment = ""
+                alignments = []
+                cover = 1
+                delay_fw, delay_rv = 1, 1
+                if len(sequence_1) > len(sequence_2):
+                    delay_fw = len(sequence_2)/len(sequence_1) 
+                else:
+                    delay_rv = len(sequence_1)/len(sequence_2)
+                while "*"*25 not in alignment and cover > 0.1: ### 25 consecutive * serve as a marker for good alignment and the minimal coverage of secuence is set to 10%
+                    align = f">\n{sequence_1[int(round(((len(sequence_1)-1)-(len(sequence_1)-1)*cover)*delay_fw, 0)) : -1]}\n>\n{sequence_2[0:int(round(((len(sequence_2)-1)*cover)*delay_rv, 0))]}"
+                    process = subprocess.run(cmd,input=align,capture_output=True,text=True,shell=True)
+                    alignment = str(process.stdout)
+                    alignments.append(alignment)
+                    cover = cover/1.25 ### As the tool finds no good alignment it reduces the amount of sequence covered
+                choice = [aln.count("*****") for aln in alignments] ### Of all sequences the one with the most accounts of 5 consecutive matches are taken to be the better ones
+                if max(choice) == 0: ### In case no good alignment is found then the last is chosen, with the least coverage
+                    align_split = alignments[-1].split('\n')
+                    max_choice = len(choice) - 1
+                else:
+                    align_split = alignments[choice.index(max(choice))].split('\n')
+                    max_choice = choice.index(max(choice))
+                align_purged = [u for u in align_split if len(u) > 1]
+                new_file.write(f" NUMBER OF READ: {len(alignments)}; COVERAGE {int(cover*(1.25**(len(choice) - max_choice))*100)}% ; CORRECTION LEVEL {correction}\n\n")
+                asterisk, seq_fw_al, seq_rv_al = "", "", ""
+                for chunk in range(0,len(align_purged)): ### Alignment is chopped into 3 parts: forward, reverse and alignment and they are filled
+                    if chunk % 3 == 0 and chunk != 0:
+                        asterisk = asterisk + align_purged[chunk][16:].replace("."," ")
+                    elif chunk % 3 == 1:
+                        seq_fw_al = seq_fw_al + align_purged[chunk][16:]
+                    elif chunk % 3 == 2:
+                        seq_rv_al = seq_rv_al + align_purged[chunk][16:]
+                ### Sequences are completed with the parts not present in the alignment
+                seq_fw_al_ad = sequence_1[0:int(round((((len(sequence_1)-1)-(len(sequence_1)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*delay_fw),0))]
+                seq_rv_al_ad = sequence_2[int(round(((len(sequence_2)-1)*cover*1.25**(len(choice) - choice.index(max(choice))))*delay_rv, 0)): -1]
+                asterisk_1 = "-"*len(seq_fw_al_ad)
+                asterisk_2 = "-"*len(seq_rv_al_ad)
+                larger = [len(splitted) for splitted in asterisk.split(" ")] ### List containing all asterisk regions
+                asterisk = asterisk_1 + asterisk + asterisk_2
+                seq_fw_al = seq_fw_al_ad + seq_fw_al + asterisk_2
+                seq_rv_al = asterisk_1 + seq_rv_al + seq_rv_al_ad
+                align = f">FORWARD\n{sequence_1}\n>REVERSE\n{sequence_2}\n\n"
+                new_file.write(align)
+                new_file.write("\n")
+                ### The full alignments are printed into the files
+                for line in range(0,len(asterisk),60):
+                    if line + 60 > len(asterisk):
+                        new_file.write(seq_fw_al[line:])
+                        new_file.write("\n")
+                        new_file.write(seq_rv_al[line:])
+                        new_file.write("\n")
+                        new_file.write(asterisk[line:])
+                        new_file.write("\n\n")
+                        break
+                    new_file.write(seq_fw_al[line:line+60])
                     new_file.write("\n")
-                    new_file.write(seq_rv_al[line:])
+                    new_file.write(seq_rv_al[line:line+60])
                     new_file.write("\n")
-                    new_file.write(asterisk[line:])
+                    new_file.write(asterisk[line:line+60])
                     new_file.write("\n\n")
-                    break
-                new_file.write(seq_fw_al[line:line+60])
-                new_file.write("\n")
-                new_file.write(seq_rv_al[line:line+60])
-                new_file.write("\n")
-                new_file.write(asterisk[line:line+60])
-                new_file.write("\n\n")
-            ### Here the correction begins, then it can be iterated over the sequence 1 and sequence 2 if statement, so that the alignments are printed
-            gaps = re.finditer(r"\*{5} {1,10}\*{5}", asterisk)
-            indices = [[match.start(), match.end()] for match in gaps]
-            for index in indices:
-                channels_proxy_fw, channels_proxy_rv = {key:[] for key in channels_fw.keys()}, {key:[] for key in channels_fw.keys()}
-                fw_index_1 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper())]
-                fw_index_2 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")]
-                rv_index_1 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper())]
-                rv_index_2 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")]
-                for key in channels_fw.keys():
-                    channels_proxy_fw[key] = channels_fw[key][fw_index_1:fw_index_2]
-                    channels_proxy_rv[key] = channels_rv[key][rv_index_1:rv_index_2]
-                fw_values = list(channels_proxy_fw.values())
-                rv_values = list(channels_proxy_rv.values())
-                channels_fw_sum = [x + y + z + t for x, y, z, t in zip(fw_values[0], fw_values[1], fw_values[2], fw_values[3])]
-                channels_rv_sum = [x + y + z + t for x, y, z, t in zip(rv_values[0], rv_values[1], rv_values[2], rv_values[3])]
-                print(channels_rv_sum, channels_fw_sum)
-                if fw_index_2 - fw_index_1 > rv_index_2 - rv_index_1:
-                    length = index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")
-                    for roll in range(1, length):
-                        #channels_proxy_fw[key] = channels_fw[key][fw_index_1:fw_index_2]
-                        while len(channels_proxy_fw) > len(channels_proxy_rv):
-                            channels_proxy_fw[key] = channels_fw[key][int(round(rv_index_1+(roll - 1)*(rv_index_2 - rv_index_1)/length)):int(round(rv_index_1+roll*(rv_index_2 - rv_index_1)/length))]
-
-                
-            break
-            pos_1, pos_2 = sequence_1.find(seq_fw_al[asterisk.find("*"*max(larger)):].replace("-","").upper()), sequence_2.find(seq_rv_al[asterisk.find("*"*max(larger)):].replace("-","").upper())
-            dict_1, dict_2 = {key:[] for key in channels_1.keys()}, {key:[] for key in channels_2.keys()}
-            ### DOP are created within the better read regions 
-            for app in range(pos_1, pos_1 + max(larger)):
-                dict_1[sequence_1[app]].append(ploc_1[app])
-            for app in range(pos_2, pos_2 + max(larger)):
-                dict_2[sequence_2[app]].append(ploc_2[app])
-            conf_1, conf_2 = confidence(dict_1, channels_1), confidence(dict_2, channels_2)
+                ### Here the correction begins, then it can be iterated over the sequence 1 and sequence 2 if statement, so that the alignments are printed
+                gaps = re.finditer(r"\*{5} {1,10}\*{3,}", asterisk) ### The search for gaps is only performed in non stochastic matches
+                indices = [[match.start(), match.end()] for match in gaps]
+                for index in indices:
+                    channels_proxy_fw, channels_proxy_rv = {key:[] for key in channels_fw.keys()}, {key:[] for key in channels_fw.keys()}
+                    fw_index_1 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper())]
+                    fw_index_2 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")]
+                    rv_index_1 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper())]
+                    rv_index_2 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")]
+                    offset_fw = (2**((len(asterisk) - index[0])/len(asterisk)))/((2**(index[0]/len(asterisk)))+2**((len(asterisk) - index[0])/len(asterisk)))
+                    offset_rv = 2**(index[0]/len(asterisk))/((2**(index[0]/len(asterisk)))+2**((len(asterisk) - index[0])/len(asterisk)))
+                    for key in channels_fw.keys():
+                        channels_proxy_fw[key] = list(channels_fw[key][fw_index_1:fw_index_2])
+                        channels_proxy_rv[key] = list(channels_rv[key][rv_index_1:rv_index_2])
+                    fw_values = list(channels_proxy_fw.values())
+                    rv_values = list(channels_proxy_rv.values())
+                    channels_fw_sum = [x + y + z + t for x, y, z, t in zip(fw_values[0], fw_values[1], fw_values[2], fw_values[3])]
+                    channels_rv_sum = [x + y + z + t for x, y, z, t in zip(rv_values[0], rv_values[1], rv_values[2], rv_values[3])]
+                    if fw_index_2 - fw_index_1 > rv_index_2 - rv_index_1:
+                        length = index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")
+                        step = 0
+                        while step < fw_index_2 - fw_index_1 - (rv_index_2 - rv_index_1):
+                            roll = step % length
+                            channels_slice = channels_fw_sum[int(round(roll*(len(channels_fw_sum))/length, 0)):int(round((roll+1)*(len(channels_fw_sum))/length, 0))]
+                            bye = channels_slice.index(min(channels_slice)) + int(round(roll*(len(channels_fw_sum))/length,0))
+                            channels_fw_sum.pop(bye)
+                            for key in channels_proxy_fw.keys():
+                                try:
+                                    channels_proxy_fw[key][bye+1] = (channels_proxy_fw[key][bye] + channels_proxy_fw[key][bye + 1])/2
+                                except IndexError:
+                                    channels_proxy_fw[key][bye-1] = (channels_proxy_fw[key][bye] + channels_proxy_fw[key][bye - 1])/2
+                                channels_proxy_fw[key].pop(bye)
+                            step += 1
+                    elif  rv_index_2 - rv_index_1 > fw_index_2 - fw_index_1:
+                        length = index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")
+                        step = 0
+                        while step < rv_index_2 - rv_index_1 - (fw_index_2 - fw_index_1):
+                            roll = step % length
+                            channels_slice = channels_rv_sum[int(round(roll*(len(channels_rv_sum))/length, 0)):int(round((roll+1)*(len(channels_rv_sum))/length, 0))]
+                            bye = channels_slice.index(min(channels_slice)) + int(round(roll*(len(channels_rv_sum))/length,0))
+                            channels_rv_sum.pop(bye)
+                            for key in channels_proxy_fw.keys():
+                                try:
+                                    channels_proxy_rv[key][bye + 1] = (channels_proxy_rv[key][bye] + channels_proxy_rv[key][bye + 1])/2
+                                except IndexError:
+                                    channels_proxy_rv[key][bye - 1] = (channels_proxy_rv[key][bye] + channels_proxy_rv[key][bye - 1])/2
+                                channels_proxy_rv[key].pop(bye)
+                            step += 1
+                    else:
+                        continue
+                    channels_sum = {key:[] for key in channels_fw.keys()}
+                    # color = ["blue", "red", "green", "orange"]
+                    # p=0
+                    for key in list(channels_sum.keys()):
+                        channels_sum[key] = [x*offset_fw + y*offset_rv for x, y in zip(channels_proxy_fw[key], channels_proxy_rv[key])]
+                    #     plt.plot(channels_sum[key], color = color[p], label = key)
+                    #     channels_sum[key] = [0]*8000 + channels_sum[key] + [0]*6000
+                    #     p+=1
+                    # for peak in peak_discovery(channels_sum)[1]:
+                    #     plt.text(peak, max([channels_sum[key][peak] for key in channels_sum.keys()]), [key for key in channels_sum.keys() if peak in list(peak_discovery(channels_sum)[0][key])][0])
+                    # plt.legend(loc="upper left")
+                    # plt.show()
+                    lod.append(channels_sum)
+                    ploc_sub.append([fw_index_1, fw_index_2, rv_index_1, rv_index_2])
+        lod = lod[::-1] ### These have been flipped to avoid index shennanigans as the substitutions can be smaller
+        ploc_sub = ploc_sub[::-1]
+        for sub in range(0,len(lod)):
+            for key in lod[sub].keys():
+                channels_fw[key] = channels_fw[key][0:ploc_sub[sub][0]] + lod[sub][key] + channels_fw[key][ploc_sub[sub][1]:]
+                channels_rv[key] = channels_rv[key][0:ploc_sub[sub][2]] + lod[sub][key] + channels_rv[key][ploc_sub[sub][3]:]
+        correction += 1
+    pos_1, pos_2 = sequence_1.find(seq_fw_al[asterisk.find("*"*max(larger)):].replace("-","").upper()), sequence_2.find(seq_rv_al[asterisk.find("*"*max(larger)):].replace("-","").upper())
+    dict_1, dict_2 = {key:[] for key in channels_1.keys()}, {key:[] for key in channels_2.keys()}
+    ### DOP are created within the better read regions 
+    for app in range(pos_1, pos_1 + max(larger)):
+        dict_1[sequence_1[app]].append(ploc_1[app])
+    for app in range(pos_2, pos_2 + max(larger)):
+        dict_2[sequence_2[app]].append(ploc_2[app])
+    conf_1, conf_2 = confidence(dict_1, channels_1), confidence(dict_2, channels_2)
+    breaker = 0
+    for confis in range(0,min(len(conf_1[0]), len(conf_2[0]))):
+        ratio = (confis)/min(len(conf_1[0]), len(conf_2[0]))
+        switch_1 = conf_1[0][confis] * conf_1[1][confis]
+        switch_2 = conf_2[0][confis] * conf_2[1][confis]
+        if switch_2 > switch_1 and breaker != 5:
+            breaker = breaker + 1
+        elif switch_1 > switch_2:
             breaker = 0
-            for confis in range(0,min(len(conf_1[0]), len(conf_2[0]))):
-                ratio = (confis)/min(len(conf_1[0]), len(conf_2[0]))
-                switch_1 = conf_1[0][confis] * conf_1[1][confis]
-                switch_2 = conf_2[0][confis] * conf_2[1][confis]
-                if switch_2 > switch_1 and breaker != 5:
-                    breaker = breaker + 1
-                elif switch_1 > switch_2:
-                    breaker = 0
-                elif breaker == 5 or confis == min(len(conf_1[0]), len(conf_2[0])) - 1:
-                    pos_1 = pos_1 + confis - 5
-                    pos_2 = pos_2 + confis - 5
-                    break
-            consensus = sequence_1[:pos_1] + sequence_2[pos_2:]
-            new_file.write(">> DINN8ing consensus \n")
-            new_file.write(consensus)
-            other_new_file.write("\n\n>> DINN8ing consensus \n")
-            other_new_file.write(consensus)
-            new_file.write("\n\n\n")
-            other_new_file.write("\n\n\n")
+        elif breaker == 5 or confis == min(len(conf_1[0]), len(conf_2[0])) - 1:
+            pos_1 = pos_1 + confis - 5
+            pos_2 = pos_2 + confis - 5
+            break
+    consensus = sequence_1[:pos_1] + sequence_2[pos_2:]
+    new_file.write(">> DINNAMITE consensus \n")
+    new_file.write(consensus)
+    other_new_file.write("\n\n>> DINNAMITE consensus \n")
+    other_new_file.write(consensus)
+    new_file.write("\n\n\n")
+    other_new_file.write("\n\n\n")
     data_file.close()
 new_file.close()
 other_new_file.close()

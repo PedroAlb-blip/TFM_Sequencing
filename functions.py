@@ -50,7 +50,7 @@ def rename(dol, guide):
     ### Easy function here, it renames the channels (DOL) to the corresponding nucleotides as stated in the guides
     tmp_lst = list(dol.keys())
     for i in range(0, len(dol.keys())):
-        dol[guide[i]] = dol.pop(str(tmp_lst[i]))
+        dol[guide[i]] = list(dol.pop(str(tmp_lst[i])))
     return dol
 
 def peak_discovery(dol):
@@ -65,6 +65,7 @@ def peak_discovery(dol):
                 peaks_key[key].append(i-1)
                 addendum.append(dol[key][i-1])
                 addendum.pop(0)
+        peaks_key[key].pop(0)
         lop = lop + peaks_key[key]
     lop.sort()
     current = int(lop[0])
@@ -103,7 +104,7 @@ def peak_discovery(dol):
         vals = vals + value 
     return peaks_key, lop, seq #### This returns the peaks as a dictionary and as a list and the sequence of all peaks
 
-def width(dol, dop): #### MUST BE CHANGED AS WELL
+def width(dol, dop): #### This provides the width at intensity 50 for the peaks
     amplitude = {key : [] for key in list(dop.keys())}
     for key in list(dop.keys()):
         for i in dop[key]:
