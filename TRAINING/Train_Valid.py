@@ -48,7 +48,7 @@ model.add(Activation('sigmoid'))
 checkpoint_path = "c:\\Users\\Pedro\\DCYFR\\weights_checkpoint.keras"
 checkpoint = keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_freq="epoch", monitor='accuracy', mode='max', save_best_only=True)
 model.compile(loss=keras.losses.BinaryFocalCrossentropy(gamma=2.0, alpha=0.25), optimizer=keras.optimizers.Adamax(learning_rate=0.001), metrics=['accuracy']) #
-history = model.fit(trainX, trainY, epochs=100, batch_size=125, verbose=1, validation_split=0.25, callbacks=[checkpoint])
+history = model.fit(trainX, trainY, epochs=100, batch_size=80, verbose=1, validation_split=0.25, callbacks=[checkpoint])
 
 keras.models.load_model(checkpoint_path)
 

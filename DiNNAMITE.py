@@ -43,9 +43,17 @@ for i in all_files: #Iterating over all files in the sequences folder
     channels_fw = rename(channels_fw, guide_fw)
     channels_rv = rename(channels_rv, guide_rv)
     correction = 0
-    while correction < 3:
+    while correction < 2:
         sequence_1, sequence_2 = "", ""
         lod, ploc_sub = [], []
+        # color = ["blue", "red", "green", "orange"]
+        # c = 0
+        # fig, axs = plt.subplots(2)
+        # for key in channels_fw.keys():
+        #     axs[0].plot(channels_fw[key], color = color[c], label = key)
+        #     axs[1].plot(channels_rv[key], color = color[c], label = key)
+        #     c += 1
+        # plt.show()
         for channels in (channels_fw, channels_rv): ### The sequences are clipped eliminitaing untruthful peaks i.e. 1s in the binary vector
             is_seq = np.array(filterer(channels, peak_discovery(channels)[0]))
             res_seq = np.ndarray.tolist(model.predict(is_seq)) ### Here the neural network is called to produce a binary vector
@@ -132,14 +140,15 @@ for i in all_files: #Iterating over all files in the sequences folder
                     new_file.write(asterisk[line:line+60])
                     new_file.write("\n\n")
                 ### Here the correction begins, then it can be iterated over the sequence 1 and sequence 2 if statement, so that the alignments are printed
-                gaps = re.finditer(r"\*{5} {1,10}\*{3,}", asterisk) ### The search for gaps is only performed in non stochastic matches
-                indices = [[match.start(), match.end()] for match in gaps]
+                gaps = re.finditer(r"\*{5} {1,10}\*{1,5}", asterisk) ### The search for gaps is only performed in non stochastic matches
+                indices = [[match.start(), match.end(), match.group()] for match in gaps]
                 for index in indices:
+                    print(index)
                     channels_proxy_fw, channels_proxy_rv = {key:[] for key in channels_fw.keys()}, {key:[] for key in channels_fw.keys()}
-                    fw_index_1 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper())]
-                    fw_index_2 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")]
-                    rv_index_1 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper())]
-                    rv_index_2 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")]
+                    fw_index_1 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper())] - 5
+                    fw_index_2 = ploc_1[sequence_1.find(seq_fw_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_fw_al[index[0]:index[1]].count("-")] + 5
+                    rv_index_1 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper())] - 5
+                    rv_index_2 = ploc_2[sequence_2.find(seq_rv_al[index[0]:index[1]].replace("-", "").upper()) + index[1] - index[0] - seq_rv_al[index[0]:index[1]].count("-")] + 5
                     offset_fw = (2**((len(asterisk) - index[0])/len(asterisk)))/((2**(index[0]/len(asterisk)))+2**((len(asterisk) - index[0])/len(asterisk)))
                     offset_rv = 2**(index[0]/len(asterisk))/((2**(index[0]/len(asterisk)))+2**((len(asterisk) - index[0])/len(asterisk)))
                     for key in channels_fw.keys():
@@ -186,21 +195,14 @@ for i in all_files: #Iterating over all files in the sequences folder
                     # p=0
                     for key in list(channels_sum.keys()):
                         channels_sum[key] = [x*offset_fw + y*offset_rv for x, y in zip(channels_proxy_fw[key], channels_proxy_rv[key])]
-                    #     plt.plot(channels_sum[key], color = color[p], label = key)
-                    #     channels_sum[key] = [0]*8000 + channels_sum[key] + [0]*6000
-                    #     p+=1
-                    # for peak in peak_discovery(channels_sum)[1]:
-                    #     plt.text(peak, max([channels_sum[key][peak] for key in channels_sum.keys()]), [key for key in channels_sum.keys() if peak in list(peak_discovery(channels_sum)[0][key])][0])
-                    # plt.legend(loc="upper left")
-                    # plt.show()
                     lod.append(channels_sum)
                     ploc_sub.append([fw_index_1, fw_index_2, rv_index_1, rv_index_2])
         lod = lod[::-1] ### These have been flipped to avoid index shennanigans as the substitutions can be smaller
         ploc_sub = ploc_sub[::-1]
         for sub in range(0,len(lod)):
             for key in lod[sub].keys():
-                channels_fw[key] = channels_fw[key][0:ploc_sub[sub][0]] + lod[sub][key] + channels_fw[key][ploc_sub[sub][1]:]
-                channels_rv[key] = channels_rv[key][0:ploc_sub[sub][2]] + lod[sub][key] + channels_rv[key][ploc_sub[sub][3]:]
+                channels_fw[key] = channels_fw[key][0:ploc_sub[sub][0]] + [(channels_fw[key][ploc_sub[sub][0]] + lod[sub][key][0])/2] + lod[sub][key] + [(lod[sub][key][-1] + channels_fw[key][ploc_sub[sub][1]])/2] + channels_fw[key][ploc_sub[sub][1]:]
+                channels_rv[key] = channels_rv[key][0:ploc_sub[sub][2]] + [(channels_rv[key][ploc_sub[sub][2]] + lod[sub][key][0])/2] + lod[sub][key] + [(lod[sub][key][-1] + channels_rv[key][ploc_sub[sub][3]])/2] + channels_rv[key][ploc_sub[sub][3]:]
         correction += 1
     pos_1, pos_2 = sequence_1.find(seq_fw_al[asterisk.find("*"*max(larger)):].replace("-","").upper()), sequence_2.find(seq_rv_al[asterisk.find("*"*max(larger)):].replace("-","").upper())
     dict_1, dict_2 = {key:[] for key in channels_1.keys()}, {key:[] for key in channels_2.keys()}
@@ -238,42 +240,3 @@ print(time.time() - start_time)
 #### TO TRAIN A NN TO CHECK IF THESE PEAKS EXIST AND THEY CORRELATE TO BASES, THE FOLLOWING PARAEMETERS MUST BE USED:
 #### AMPLITUDE OF PEAKS, DISTANCE BETWEEN PEAKS, INTENSITY, CONFIDENCE, DERIVATIVES SIDEWAYS OF PEAK
 #### MATCHES WITHIN THE ALIGNMENT CAN BE USED FOR TRANING 
-
-        # alignment = [aln for aln in alignments if aln != ""][-1]
-        # align_split = alignment.split('\n')
-        # align_purged = [u for u in align_split if len(u) > 1]
-        # only, seq_fw_al, seq_rv_al = "", "", ""
-        # for chunk in range(0,len(align_purged)):
-        #     if chunk % 3 == 0 and chunk != 0:
-        #         only = only + align_purged[chunk][16:]
-        #     elif chunk % 3 == 1:
-        #         seq_fw_al = seq_fw_al + align_purged[chunk][16:]
-        #     elif chunk % 3 == 2:
-        #         seq_rv_al = seq_rv_al + align_purged[chunk][16:]
-        # asterisk = only[re.search(r"[actg]{9}", seq_fw_al).start() : - re.search(r"[actg]{9}", seq_rv_al[::-1]).start() - 1]
-        # seq_fw_pg = seq_fw_al[re.search(r"[actg]{9}", seq_fw_al).start() : - re.search(r"[actg]{9}", seq_rv_al[::-1]).start() - 1]
-        # seq_rv_pg = seq_rv_al[re.search(r"[actg]{9}", seq_fw_al).start() : - re.search(r"[actg]{9}", seq_rv_al[::-1]).start() - 1]
-        # gaps = re.finditer(r"[\*\.]{2,6} +[\*\.]{2,6}", asterisk)
-        # colors = {"A" : "green", "G" : "blue", "T" : "black", "C" : "red"}
-        # for gap in gaps:
-        #     dict_sum = {key : [] for key in list(channels_1.keys())}
-        #     for key in dict_sum:
-        #         pos_1 = 2**((len(asterisk)-((gap.start() + gap.end())/2))/len(asterisk))
-        #         pos_2 = 2**(((gap.start() + gap.end())/2)/len(asterisk))
-        #         ratio_1 = pos_1/(pos_1 + pos_2)
-        #         ratio_2 = pos_2/(pos_1 + pos_2)
-        #         list_1 = channels_1[key][ploc_1[sequence_1.find(seq_fw_pg[gap.start() - 4 :gap.end() + 4].replace("-", "").upper())] : ploc_1[sequence_1.find(seq_fw_pg[gap.start() - 4 :gap.end() + 4].replace("-", "").upper()) + len(seq_fw_pg[gap.start() - 4 :gap.end() + 4].replace("-", "")) - 1]]
-        #         list_2 = channels_2[key][ploc_2[sequence_2.find(seq_rv_pg[gap.start() - len(seq_rv_pg) - 4 : gap.end() - len(seq_rv_pg) + 4].replace("-","").upper())] : ploc_2[sequence_2.find(seq_rv_pg[gap.start() - len(seq_rv_pg) - 4 : gap.end() - len(seq_rv_pg) + 4].replace("-","").upper()) + len(seq_rv_pg[gap.start() - len(seq_rv_pg) - 4 : gap.end() - len(seq_rv_pg) + 4].replace("-","")) - 1]]
-        #         dict_sum[key] = tuple([0]*800) + tuple([(list_1[ind]*ratio_1 + list_2[ind]*ratio_2)/2 for ind in range(0, min(len(list_1), len(list_2)))]) + tuple([0]*2000)
-        #         plt.plot(dict_sum[key], color = colors[key])
-        #     is_gap = np.array(filterer(dict_sum, peak_discovery(dict_sum)[0]))
-        #     seq_gap = peak_discovery(dict_sum)[2]
-        #     gap_pred = np.ndarray.tolist(model.predict(is_gap))
-        #     gap_bin = [int(round(num[0], 0)) for num in gap_pred[:]]
-        #     print(gap_bin)
-        #     temp_seq = ''
-        #     for bin in range(0, len(gap_bin)):
-        #         if gap_bin[bin] == int(0):
-        #             temp_seq = temp_seq + seq_gap[bin]
-        #     print(seq_fw_pg[gap.start() - 4 :gap.end() + 4].replace("-", "").upper(), "\n", seq_rv_pg[gap.start() - len(seq_rv_pg) - 4 : gap.end() - len(seq_rv_pg) + 4].replace("-", "").upper(), "\n", temp_seq)
-        #     plt.show()
